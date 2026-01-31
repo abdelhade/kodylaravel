@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/kody2",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Kody2\\": "app/",
+            "Modules\\Kody2\\Database\\Factories\\": "database/factories/",
+            "Modules\\Kody2\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Kody2\\Tests\\": "tests/"
+        }
+    }
+}

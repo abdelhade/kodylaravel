@@ -1,0 +1,11 @@
+{
+    "name": "Kody2",
+    "alias": "kody2",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Kody2\\Providers\\Kody2ServiceProvider"
+    ],
+    "files": []
+}
