@@ -1,0 +1,10 @@
+{
+    "name": "Purchases",
+    "alias": "purchases",
+    "description": "نظام إدارة المشتريات والموردين",
+    "keywords": [],
+    "priority": 0,
+    "providers": [],
+    "files": [],
+    "requires": []
+}

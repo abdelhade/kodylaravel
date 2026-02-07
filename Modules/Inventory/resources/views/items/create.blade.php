@@ -1,290 +1,178 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
+
     <section class="content-header">
         <div class="container-fluid">
-            @if(isset($role['add_items']) && $role['add_items'] == 1)
-                <div class="card">
-                    <form id="myForm" action="{{ route('items.store') }}" method="post" enctype="multipart/form-data">
-                        @csrf
-                        <div class="card-header bg-blue-400">
-                            <div class="col">
-                                <h3>صنف جديد</h3>
-                            </div>
-                        </div>
+            <div class="card border-0 shadow-sm">
 
-                        <div class="card-body">
-                            @if(session('error'))
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    {{ session('error') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            @endif
+                <form id="myForm" action="{{ route('items.store') }}" method="post" enctype="multipart/form-data">
+                    @csrf
 
-                            @if($errors->any())
-                                <div class="alert alert-danger">
-                                    <ul class="mb-0">
-                                        @foreach($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="code">الكود</label>
-                                        <input readonly value="{{ $nextCode }}" class="form-control form-control-sm col-4" type="text" name="code" id="code">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="barcode">الباركود</label>
-                                        <input required value="{{ $nextCode }}" class="form-control form-control-sm" type="text" name="barcode" id="barcode">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="iname">اسم الصنف</label>
-                                        <datalist id="inamelist">
-                                            @foreach($itemNames as $name)
-                                                <option value="{{ $name }}">{{ $name }}</option>
-                                            @endforeach
-                                        </datalist>
-                                        <input list="inamelist" required class="frst form-control form-control-sm" type="text" name="iname" id="iname" value="{{ old('iname') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="name2">اسم ثاني</label>
-                                        <input class="form-control form-control-sm" type="text" name="name2" id="name2" value="{{ old('name2') }}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="info">تفاصيل</label>
-                                        <input class="form-control form-control-sm" type="text" name="info" id="info" value="{{ old('info') }}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-light p-3 mt-3">
-                                <b>الوحدات</b>
-                                <p id="addUnit" class="btn btn-primary">اضافه وحده</p>
-                                <div class="row">
-                                    <div class="table-responsive">
-                                        <table class="table table-responsive">
-                                            <thead>
-                                                <tr>
-                                                    <th class="w-80" style="width:120px">الوحدة</th>
-                                                    <th class="w-80" style="width:120px">م التحويل</th>
-                                                    <th class="w-80" style="width:120px">باركود</th>
-                                                    <th class="w-80" style="width:120px">سعر التكلفه</th>
-                                                    <th class="w-80" style="width:120px">سعر البيع</th>
-                                                    <th class="w-80" style="width:120px">سعر البيع 2</th>
-                                                    <th class="w-80" style="width:120px">سعر السوق</th>
-                                                    <th class="w-80" style="width:120px">حذف</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr class="urow">
-                                                    <td>
-                                                        <select name="unit_id[]" class="form-control">
-                                                            @foreach($units as $unit)
-                                                                <option value="{{ $unit->id }}">{{ $unit->uname }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <input class="form-control" type="number" readonly name="u_val[]" value="1" step="0.001">
-                                                    </td>
-                                                    <td>
-                                                        <input class="form-control" type="text" name="unit_barcode[]" value="{{ $nextCode }}">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="cost_price[]" class="form-control form-control-sm" value="0.00" step="0.001">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="price1[]" class="form-control form-control-sm" value="0.00" step="0.001">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="price2[]" class="form-control form-control-sm" value="0.00" step="0.001">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="market_price[]" class="form-control form-control-sm" value="0.00" step="0.001">
-                                                    </td>
-                                                    <th>
-                                                        <p class="btn btn-danger deleteRow">X</p>
-                                                    </th>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row mt-3">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="group1">المجموعة</label>
-                                        <select name="group1" id="group1" class="form-control form-control-sm float-right">
-                                            <option value="">اختر المجموعة</option>
-                                            @foreach($groups1 as $group)
-                                                <option value="{{ $group->id }}" {{ old('group1') == $group->id ? 'selected' : '' }}>
-                                                    {{ $group->gname }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="group2">التصنيف</label>
-                                        <select name="group2" id="group2" class="form-control form-control-sm float-right">
-                                            <option value="">اختر التصنيف</option>
-                                            @foreach($groups2 as $group)
-                                                <option value="{{ $group->id }}" {{ old('group2') == $group->id ? 'selected' : '' }}>
-                                                    {{ $group->gname }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group mt-3">
-                                <label class="btn btn-secondary" for="img">صور للصنف</label>
-                                <input type="file" name="imgs[]" id="img" multiple accept="image/*">
-                            </div>
-                        </div>
-
-                        <div class="card-footer">
-                            <div class="row">
-                                <div class="col">
-                                    <button type="submit" class="btn btn-primary btn-lg float-right btn-block">حفظ</button>
-                                </div>
-                                <div class="col"></div>
-                            </div>
-                        </div>
-                    </form>
-
-                    <div class="card-footer">
-                        <p>iname , code , barcode , cost_price , price1 , price2 , qty</p>
-                        <div class="col-md-3">
-                            <form action="{{ route('items.upload') }}" method="post" enctype="multipart/form-data">
-                                @csrf
-                                <label for="file">تحميل ورقة اكسيل</label>
-                                <input type="file" name="file" id="file">
-                                <button class="btn btn-secondary" type="submit">تحميل</button>
-                            </form>
+                    {{-- HEADER --}}
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                        <h5 class="mb-0 fw-bold text-info">إضافة صنف</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-info btn-sm">حفظ</button>
+                            <a href="{{ route('items.index') }}" class="btn btn-outline-secondary btn-sm">عودة</a>
                         </div>
                     </div>
-                </div>
-            @else
-                <div class="alert alert-danger">
-                    {{ $userErrorMassage ?? 'ليس لديك صلاحية للوصول إلى هذه الصفحة' }}
-                </div>
-            @endif
+
+                    <div class="card-body">
+
+                        {{-- بيانات أساسية --}}
+                        <div class="box">
+                            <div class="row g-3">
+
+                                <div class="col-md-3 mb-2">
+                                    <label>رقم الصنف</label>
+                                    <input readonly value="{{ $nextCode }}" name="code"
+                                        class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <label>الباركود</label>
+                                    <input required value="{{ $nextCode }}" name="barcode"
+                                        class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <label>اسم الصنف</label>
+                                    <datalist id="inamelist">
+                                        @foreach ($itemNames as $name)
+                                            <option value="{{ $name }}">
+                                        @endforeach
+                                    </datalist>
+                                    <input list="inamelist" name="iname" class="form-control form-control-sm" required>
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <label>اسم ثاني</label>
+                                    <input name="name2" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label>التفاصيل</label>
+                                    <input name="info" class="form-control form-control-sm">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {{-- الوحدات --}}
+                        <div class="box">
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>الوحدات والأسعار</strong>
+                                <button type="button" id="addUnit" class="btn btn-info btn-sm">+ إضافة وحدة</button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>الوحدة</th>
+                                            <th>معامل</th>
+                                            <th>باركود</th>
+                                            <th>تكلفة</th>
+                                            <th>قطاعي</th>
+                                            <th>جملة</th>
+                                            <th>السوق</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="urow">
+                                            <td>
+                                                <select name="unit_id[]" class="form-select form-select-sm">
+                                                    @foreach ($units as $unit)
+                                                        <option value="{{ $unit->id }}">{{ $unit->uname }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                            <td><input name="u_val[]" value="1" readonly
+                                                    class="form-control form-control-sm"></td>
+                                            <td><input name="unit_barcode[]" value="{{ $nextCode }}"
+                                                    class="form-control form-control-sm"></td>
+                                            <td><input name="cost_price[]" value="0"
+                                                    class="form-control form-control-sm"></td>
+                                            <td><input name="price1[]" value="0" class="form-control form-control-sm">
+                                            </td>
+                                            <td><input name="price2[]" value="0" class="form-control form-control-sm">
+                                            </td>
+                                            <td><input name="market_price[]" value="0"
+                                                    class="form-control form-control-sm"></td>
+                                            <td>
+                                                <button type="button"
+                                                    class="btn btn-outline-danger btn-sm deleteRow">×</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- التصنيفات --}}
+                        <div class="box">
+                            <div class="row g-3">
+                                <div class="col-md-6 form-group">
+                                    <label>المجموعة</label>
+                                    <select name="group1" class="form-select form-select-sm form-control">
+                                        <option value="">اختر</option>
+                                        @foreach ($groups1 as $g)
+                                            <option value="{{ $g->id }}">{{ $g->gname }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label>التصنيف</label>
+                                    <select name="group2" class="form-select form-select-sm form-control">
+                                        <option value="">اختر</option>
+                                        @foreach ($groups2 as $g)
+                                            <option value="{{ $g->id }}">{{ $g->gname }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- الصور --}}
+                        <div class="mb-3">
+                            <label for="images" class="form-label">صور الصنف</label>
+                            <input class="form-control" type="file" id="images" name="imgs[]"  multiple>
+                        </div>
+
+                    </div>
+
+                    {{-- FOOTER --}}
+                    <div class="card-footer bg-white d-flex justify-content-between">
+                        <small class="text-muted">الحقول الأساسية مطلوبة</small>
+                        <button class="btn btn-info px-4">حفظ</button>
+                    </div>
+
+                </form>
+            </div>
         </div>
     </section>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Fields to monitor
-    var fields = ["cost_price", "price1", "price2", "market_price"];
+    {{-- JS نفس اللوجيك --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
 
-    // Monitor first row fields
-    fields.forEach(function(fieldName) {
-        $('.urow:first input[name="' + fieldName + '[]"]').on('input', function() {
-            updateAllRows(fieldName);
+            $('#addUnit').click(function() {
+                let clone = $('.urow').first().clone();
+                clone.find('input').val('');
+                clone.find('input[name="u_val[]"]').val(1).prop('readonly', false);
+                $('.urow').last().after(clone);
+            });
+
+            $(document).on('click', '.deleteRow', function() {
+                if ($('.urow').length > 1)
+                    $(this).closest('.urow').remove();
+                else alert('لا يمكن حذف الوحدة الأولى');
+            });
+
         });
-    });
-
-    // Monitor u_val changes
-    $(document).on('input', 'input[name="u_val[]"]', function() {
-        var currentRow = $(this).closest('.urow');
-        var u_val = parseFloat($(this).val()) || 1;
-        
-        fields.forEach(function(fieldName) {
-            var firstRowValue = parseFloat($('.urow:first input[name="' + fieldName + '[]"]').val()) || 0;
-            currentRow.find('input[name="' + fieldName + '[]"]').val((firstRowValue * u_val).toFixed(3));
-        });
-    });
-
-    // Update all rows based on first row
-    function updateAllRows(fieldName) {
-        $('.urow').each(function(index) {
-            if (index === 0) return;
-            
-            var currentRow = $(this);
-            var u_val_current = parseFloat(currentRow.find('input[name="u_val[]"]').val()) || 1;
-            var firstRowValue = parseFloat($('.urow:first input[name="' + fieldName + '[]"]').val()) || 0;
-            currentRow.find('input[name="' + fieldName + '[]"]').val((firstRowValue * u_val_current).toFixed(3));
-        });
-    }
-
-    // Add new unit row
-    $('#addUnit').click(function() {
-        var clone = $('.urow').first().clone();
-        clone.find('input[name="u_val[]"]').val('1').prop('readonly', false);
-        clone.find('input[name="unit_barcode[]"]').val('');
-        
-        var u_val_main = parseFloat($('.urow').first().find('input[name="u_val[]"]').val()) || 1;
-        
-        fields.forEach(function(fieldName) {
-            var firstValue = parseFloat($('.urow').first().find('input[name="' + fieldName + '[]"]').val()) || 0;
-            clone.find('input[name="' + fieldName + '[]"]').val((firstValue * u_val_main).toFixed(3));
-        });
-        
-        $('.urow').last().after(clone);
-        
-        clone.find('.deleteRow').click(function() {
-            if ($('.urow').length > 1) clone.remove();
-            else alert('لا يمكن حذف الوحدة الاولي');
-        });
-    });
-
-    // Delete row
-    $('.deleteRow').click(function() {
-        if ($('.urow').length > 1) $(this).closest('.urow').remove();
-        else alert('لا يمكن حذف الوحدة الاولي');
-    });
-
-    // Prevent duplicate units
-    $("form").on("submit", function(e) {
-        let selectedValues = [];
-        let duplicateFound = false;
-
-        $('select[name="unit_id[]"]').each(function() {
-            let selectedValue = $(this).val();
-            if (selectedValues.includes(selectedValue)) {
-                duplicateFound = true;
-            }
-            selectedValues.push(selectedValue);
-        });
-
-        if (duplicateFound) {
-            e.preventDefault();
-            alert("غير مسموح بتكرار الوحدات");
-        }
-    });
-
-    // Prevent Enter key submission
-    $(document).on('keydown', function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-        }
-    });
-});
-</script>
+    </script>
 @endsection

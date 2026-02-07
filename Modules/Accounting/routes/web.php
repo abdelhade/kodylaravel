@@ -22,7 +22,7 @@ Route::middleware('check.auth')->group(function () {
     Route::post('/add_account', [AccountController::class, 'store'])->name('accounts.store');
     Route::get('/edit_account', [AccountController::class, 'edit'])->name('accounts.edit'); // Uses ?id= query param
     Route::put('/edit_account/update', [AccountController::class, 'update'])->name('accounts.update'); // Uses ?id= query param
-    Route::get('/edit_account/delete', [AccountController::class, 'destroy'])->name('accounts.destroy'); // Uses ?id= query param
+    Route::get('/edit_account/delete', [AccountController::class, 'destroy'])->name('accounts.delete'); // Uses ?id= query param
     
     // Journals routes (Converted to Blade)
     Route::get('/daily_journal', [JournalController::class, 'index'])->name('journals.index');
