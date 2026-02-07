@@ -30,13 +30,21 @@ class ItemController extends Controller
             ->offset($offset)
             ->get();
 
-        // Get units for each item
+        // Get units for each item and market price
         foreach ($items as $item) {
             $item->units = DB::table('item_units')
                 ->where('item_id', $item->id)
                 ->join('myunits', 'item_units.unit_id', '=', 'myunits.id')
                 ->select('item_units.*', 'myunits.uname')
                 ->get();
+            
+            // Get market price (price3) from the first unit
+            $firstUnit = DB::table('item_units')
+                ->where('item_id', $item->id)
+                ->orderBy('id')
+                ->first();
+            
+            $item->market_price = $firstUnit ? $firstUnit->price3 : 0;
         }
 
         // Get total count for pagination
@@ -216,6 +224,14 @@ class ItemController extends Controller
         $itemUnits = DB::table('item_units')
             ->where('item_id', $id)
             ->get();
+        
+        // Get market price (price3) from the first unit
+        $firstUnit = DB::table('item_units')
+            ->where('item_id', $id)
+            ->orderBy('id')
+            ->first();
+        
+        $marketPrice = $firstUnit ? $firstUnit->price3 : 0;
 
         // Get groups
         $groups1 = DB::table('item_group')->where('isdeleted', 0)->get();
@@ -228,7 +244,7 @@ class ItemController extends Controller
         $settings = SidebarHelper::getSettings();
         $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
 
-        return view('inventory::items.edit', compact('item', 'itemUnits', 'units', 'groups1', 'groups2', 'itemNames', 'usedInInvoices', 'settings', 'lang'));
+        return view('inventory::items.edit', compact('item', 'itemUnits', 'units', 'groups1', 'groups2', 'itemNames', 'usedInInvoices', 'settings', 'lang', 'marketPrice'));
     }
 
     /**

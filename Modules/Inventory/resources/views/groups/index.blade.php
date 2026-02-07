@@ -1,14 +1,22 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h2>المجموعات</h2>
-                </div>
-                <div class="card-body">
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3  style="font-size: 20px; font-weight: bolder;">مجموعات الأصناف</h3>
+                <small class="text-muted">تنظيم الأصناف في مجموعات رئيسية / فرعية</small>
+            </div>
+        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 style="font-size: 20px; font-weight: bolder;">إدارة المجموعات</h5>
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#addGroupModal">
+                    <i class="fa fa-plus"></i> إضافة مجموعة
+                </button>
+            </div>
+            <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
@@ -16,20 +24,8 @@
                         <div class="alert alert-danger">{{ session('error') }}</div>
                     @endif
 
-                    <div class="col-md-4 border rounded m-0 p-3 mb-3">
-                        <form action="{{ route('groups.store') }}" method="post">
-                            @csrf
-                            <input type="text" name="gname" class="form-control" 
-                                   placeholder="أدخل مجموعة جديدة" value="{{ old('gname') }}" required>
-                            @error('gname')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                            <button type="submit" class="btn btn-info btn-block mt-2">حفظ</button>
-                        </form>
-                    </div>
-
-                    <div class="table-responsive" id="">
-                        <table class="table table-bordered table-hover">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm table-hover align-middle">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -40,49 +36,58 @@
                             <tbody>
                                 @forelse($groups as $index => $group)
                                     <tr>
-                                        <form action="{{ route('groups.update', ['id' => $group->id]) }}" method="post">
-                                            @csrf
-                                            @method('PUT')
-                                            <th>{{ $index + 1 }}</th>
-                                            <th>
-                                                <input class="form-control" type="text" value="{{ $group->gname }}" name="gname" required>
-                                            </th>
-                                            <th>
-                                                <button type="submit" class="btn btn-sm btn-warning">
-                                                    <i class="fa fa-pen"></i>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            {{ $group->gname }}
+                                        </td>
+                                        <td>
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        data-toggle="modal" data-target="#editModal{{ $group->id }}">
+                                                    <i class="fa fa-edit"></i>
                                                 </button>
-                                                <button type="button" class="btn bg-red-600 text-red-100 btn-sm" 
-                                                        data-toggle="modal" data-target="#deleteModal{{ $group->id }}">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </th>
-                                        </form>
+                                                <form action="{{ route('groups.destroy', ['id' => $group->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذه المجموعة؟');">
+                                                    @csrf
+                                                    @method('DELETE')                                                    
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                     </tr>
 
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" id="deleteModal{{ $group->id }}">
+                                    <!-- Edit Modal -->
+                                    <div class="modal fade" id="editModal{{ $group->id }}">
                                         <div class="modal-dialog">
-                                            <div class="modal-content bg-danger">
+                                            <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h4 class="modal-title">تحذير</h4>
+                                                    <h4 class="modal-title">تعديل المجموعة</h4>
                                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
                                                 </div>
-                                                <div class="modal-body">
-                                                    <p>هل تريد بالتأكيد حذف {{ $group->gname }}؟</p>
-                                                </div>
-                                                <div class="modal-footer justify-content-between">
-                                                    <button type="button" class="btn btn-outline-light" data-dismiss="modal">إلغاء</button>
-                                                    <form action="{{ route('groups.destroy', ['id' => $group->id]) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-light">حذف</button>
-                                                    </form>
-                                                </div>
+                                                <form action="{{ route('groups.update', ['id' => $group->id]) }}" method="post">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-body">
+                                                        <div class="form-group">
+                                                            <label for="gname{{ $group->id }}">اسم المجموعة</label>
+                                                            <input type="text" class="form-control" id="gname{{ $group->id }}" 
+                                                                   name="gname" value="{{ $group->gname }}" required>
+                                                            @error('gname')
+                                                                <span class="text-danger">{{ $message }}</span>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                                                        <button type="submit" class="btn btn-success">حفظ التعديلات</button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
+
+
                                 @empty
                                     <tr>
                                         <td colspan="3" class="text-center">لا توجد مجموعات</td>
@@ -91,9 +96,38 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</section>
+    <!-- Add Group Modal -->
+    <div class="modal fade" id="addGroupModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">إضافة مجموعة جديدة</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('groups.store') }}" method="post">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="gname">اسم المجموعة</label>
+                            <input type="text" class="form-control" id="gname" 
+                                   name="gname" placeholder="أدخل اسم المجموعة" value="{{ old('gname') }}" required>
+                            @error('gname')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection

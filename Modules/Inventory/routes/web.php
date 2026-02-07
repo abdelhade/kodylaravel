@@ -8,7 +8,10 @@ use Modules\Inventory\Http\Controllers\GroupController;
 use Modules\Inventory\Http\Controllers\CategoryController;
 use Modules\Inventory\Http\Controllers\ItemStartBalanceController;
 use Modules\Inventory\Http\Controllers\StoreController;
-use App\Http\Controllers\LegacyController;
+use Modules\Inventory\Http\Controllers\BarcodeController;
+
+// Public API routes (no authentication required)
+Route::get('/api/public/barcode/price', [BarcodeController::class, 'pricePublic'])->name('barcode.price.public');
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes
@@ -31,6 +34,7 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/myunits', [UnitController::class, 'index'])->name('units.index');
     Route::post('/myunits', [UnitController::class, 'store'])->name('units.store');
     Route::put('/myunits/update', [UnitController::class, 'update'])->name('units.update'); // Uses ?id= query param
+    Route::delete('/myunits/delete', [UnitController::class, 'destroy'])->name('units.destroy'); // Uses ?id= query param
     
     // Groups routes (Converted to Blade)
     Route::get('/mygroups', [GroupController::class, 'index'])->name('groups.index');
@@ -57,6 +61,9 @@ Route::middleware('check.auth')->group(function () {
     Route::put('/add_store/update', [StoreController::class, 'update'])->name('stores.update'); // Uses ?id= query param
     Route::delete('/add_store/delete', [StoreController::class, 'destroy'])->name('stores.destroy'); // Uses ?id= query param
     
-    // Legacy routes - ادارة المخزون (keeping for backward compatibility)
-    Route::get('/barcode_search', [LegacyController::class, 'handle'])->name('barcode_search');
+    // Barcode price lookup routes (Converted to Blade)
+    Route::get('/barcode_search', [BarcodeController::class, 'index'])->name('barcode_search');
+    
+    // Authenticated API routes
+    Route::get('/api/barcode/price', [BarcodeController::class, 'price'])->name('barcode.price');
 });

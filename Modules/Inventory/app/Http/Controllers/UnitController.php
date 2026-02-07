@@ -74,4 +74,28 @@ class UnitController extends Controller
         return redirect()->route('units.index')
             ->with('success', 'تم تحديث الوحدة بنجاح');
     }
+
+    public function destroy(Request $request)
+    {
+        $id = $request->get('id');
+        if (!$id) {
+            return redirect()->back()->with('error', 'معرف الوحدة مطلوب');
+        }
+
+        // Check if unit is used in items before deleting
+        $itemExists = DB::table('myitems')->where('unit', $id)->exists();
+        if ($itemExists) {
+            return redirect()->back()->with('error', 'لا يمكن حذف الوحدة لأنها مستخدمة في بعض الأصناف');
+        }
+
+        DB::table('myunits')->where('id', $id)->delete();
+
+        DB::table('process')->insert([
+            'type' => 'delete unit',
+            'created_at' => now(),
+        ]);
+
+        return redirect()->route('units.index')
+            ->with('success', 'تم حذف الوحدة بنجاح');
+    }
 }

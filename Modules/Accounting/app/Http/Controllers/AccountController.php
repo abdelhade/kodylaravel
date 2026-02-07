@@ -79,6 +79,51 @@ class AccountController extends Controller
                 'color' => 'slate',
                 'parent_id' => 213,
                 'is_person' => true
+            ],
+            // مدينين متنوعين / آخرين
+            'other_debtors' => [
+                'name' => 'مدينين متنوعين',
+                'prefix' => '125',
+                'icon' => 'fa-user-plus',
+                'color' => 'teal',
+                'parent_id' => 125,
+                'is_person' => false
+            ],
+            // دائنين متنوعين / آخرين
+            'other_creditors' => [
+                'name' => 'دائنين متنوعين',
+                'prefix' => '212',
+                'icon' => 'fa-user-minus',
+                'color' => 'fuchsia',
+                'parent_id' => 212,
+                'is_person' => false
+            ],
+            // الشركاء
+            'partners' => [
+                'name' => 'الشركاء',
+                'prefix' => '221',
+                'icon' => 'fa-handshake',
+                'color' => 'cyan',
+                'parent_id' => 221,
+                'is_person' => true
+            ],
+            // الأصول (الحساب الرئيسي 1)
+            'assets' => [
+                'name' => 'الاصول',
+                'prefix' => '1',
+                'icon' => 'fa-landmark',
+                'color' => 'lime',
+                'parent_id' => 1,
+                'is_person' => false
+            ],
+            // الأصول القابلة للتأجير (112)
+            'rentable_assets' => [
+                'name' => 'الاصول القابلة للتأجير',
+                'prefix' => '112',
+                'icon' => 'fa-building',
+                'color' => 'emerald',
+                'parent_id' => 112,
+                'is_person' => false
             ]
         ];
     }
