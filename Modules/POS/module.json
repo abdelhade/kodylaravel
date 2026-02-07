@@ -1,11 +1,12 @@
 {
-    "name": "POS",
-    "alias": "pos",
-    "description": "",
-    "keywords": [],
-    "priority": 0,
-    "providers": [
-        "Modules\\POS\\Providers\\POSServiceProvider"
-    ],
-    "files": []
+  "name": "POS",
+  "alias": "pos",
+  "description": "نظام نقاط البيع - Point of Sale System",
+  "keywords": ["pos", "sales", "barcode", "tables", "shifts"],
+  "priority": 0,
+  "providers": [
+    "Modules\\POS\\Providers\\POSServiceProvider"
+  ],
+  "files": [],
+  "requires": []
 }

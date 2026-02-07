@@ -3,178 +3,146 @@
 namespace Modules\POS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Helpers\SidebarHelper;
+use Modules\POS\Models\POSTable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class POSController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('check.auth');
+    }
+
     /**
-     * Display a listing of the resource.
+     * عرض واجهة نقاط البيع الرئيسية
      */
     public function index()
     {
-        $settings = SidebarHelper::getSettings();
-        $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
+        $tables = POSTable::active()->get();
+        $stores = DB::table('acc_head')
+            ->where('is_stock', 1)
+            ->where('isdeleted', 0)
+            ->get();
+        $employees = DB::table('acc_head')
+            ->where('parent_id', 35)
+            ->where('is_basic', 0)
+            ->get();
+        $customers = DB::table('acc_head')
+            ->where('code', 'like', '122%')
+            ->get();
+        $funds = DB::table('acc_head')
+            ->where('is_fund', 1)
+            ->get();
 
-        return view('pos::pos.index', compact('settings', 'lang', ));
+        return view('pos::pos.index', compact('tables', 'stores', 'employees', 'customers', 'funds'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * البحث عن صنف بالباركود
      */
-    public function create()
+    public function searchItem(Request $request)
     {
-        return view('pos::create');
+        $barcode = $request->input('barcode');
+        
+        $item = DB::table('acc_head')
+            ->where('barcode', $barcode)
+            ->orWhere('code', $barcode)
+            ->first();
+
+        if (!$item) {
+            return response()->json(['error' => 'الصنف غير موجود'], 404);
+        }
+
+        return response()->json($item);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * إضافة صنف للطلب
      */
-    public function store(Request $request) {}
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
+    public function addItem(Request $request)
     {
-        return view('pos::show');
-    }
+        $validated = $request->validate([
+            'item_id' => 'required|integer',
+            'quantity' => 'required|numeric|min:0.01',
+            'price' => 'required|numeric|min:0',
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('pos::edit');
-    }
+        $item = DB::table('acc_head')->find($validated['item_id']);
+        
+        if (!$item) {
+            return response()->json(['error' => 'الصنف غير موجود'], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id) {}
+        $total = $validated['quantity'] * $validated['price'];
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id) {}
-
-    /**
-     * Show basic barcode POS (converted from pos_barcode0.php)
-     */
-    public function barcodeBasic()
-    {
-        $settings = SidebarHelper::getSettings();
-        $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
-
-        // Fetch data using raw queries (matching native behavior)
-        $stores = \DB::select("SELECT * FROM acc_head WHERE is_stock = 1 AND isdeleted = 0");
-        $employees = \DB::select("SELECT * FROM acc_head WHERE parent_id = 35 AND is_basic = 0 AND isdeleted = 0");
-        $clients = \DB::select("SELECT * FROM acc_head WHERE code LIKE '122%' AND is_basic = 0 AND isdeleted = 0");
-        $funds = \DB::select("SELECT * FROM acc_head WHERE is_fund = 1 AND is_basic = 0 AND isdeleted = 0");
-        $categories = \DB::select("SELECT * FROM item_group WHERE isdeleted = 0");
-        $items = \DB::select("SELECT * FROM myitems WHERE isdeleted = 0");
-
-        // Convert settings array to object for blade compatibility
-        $settingsObj = (object) $settings;
-
-        return view('pos::barcode-basic', [
-            'settings' => $settingsObj,
-            'lang' => $lang,
-            'stores' => $stores,
-            'employees' => $employees,
-            'clients' => $clients,
-            'funds' => $funds,
-            'categories' => $categories,
-            'items' => $items,
+        return response()->json([
+            'item_id' => $item->id,
+            'item_name' => $item->aname,
+            'quantity' => $validated['quantity'],
+            'price' => $validated['price'],
+            'total' => $total
         ]);
     }
 
     /**
-     * Show Purchase Order POS (converted from pos_po.php)
+     * حفظ الطلب
      */
-    public function purchaseOrder()
+    public function saveOrder(Request $request)
     {
-        $settings = SidebarHelper::getSettings();
-        $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
-
-        $stores = \DB::select("SELECT * FROM acc_head WHERE is_stock = 1 AND isdeleted = 0");
-        $employees = \DB::select("SELECT * FROM acc_head WHERE parent_id = 35 AND is_basic = 0 AND isdeleted = 0");
-        $suppliers = \DB::select("SELECT * FROM acc_head WHERE code LIKE '211%' AND is_basic = 0 AND isdeleted = 0");
-        $funds = \DB::select("SELECT * FROM acc_head WHERE is_fund = 1 AND is_basic = 0 AND isdeleted = 0");
-        $categories = \DB::select("SELECT * FROM item_group WHERE isdeleted = 0");
-        $items = \DB::select("SELECT * FROM myitems WHERE isdeleted = 0");
-
-        $settingsObj = (object) $settings;
-
-        return view('pos::po', [
-            'settings' => $settingsObj,
-            'lang' => $lang,
-            'stores' => $stores,
-            'employees' => $employees,
-            'suppliers' => $suppliers,
-            'funds' => $funds,
-            'categories' => $categories,
-            'items' => $items,
+        $validated = $request->validate([
+            'table_id' => 'nullable|integer',
+            'order_type' => 'required|in:1,2,3', // 1=تيك أواي، 2=طاولة، 3=دليفري
+            'items' => 'required|array',
+            'total' => 'required|numeric',
+            'discount' => 'nullable|numeric',
+            'notes' => 'nullable|string',
         ]);
-    }
 
-    /**
-     * Show Tables POS (converted from pos_tables.php)
-     */
-    public function tables()
-    {
-        $settings = SidebarHelper::getSettings();
-        $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
+        try {
+            DB::beginTransaction();
 
-        $stores = \DB::select("SELECT * FROM acc_head WHERE is_stock = 1 AND isdeleted = 0");
-        $employees = \DB::select("SELECT * FROM acc_head WHERE parent_id = 35 AND is_basic = 0 AND isdeleted = 0");
-        $funds = \DB::select("SELECT * FROM acc_head WHERE is_fund = 1 AND is_basic = 0 AND isdeleted = 0");
-        $categories = \DB::select("SELECT * FROM item_group WHERE isdeleted = 0");
-        $items = \DB::select("SELECT * FROM myitems WHERE isdeleted = 0");
-        $tables = \DB::select("SELECT * FROM tables WHERE isdeleted = 0");
+            // إنشاء الطلب
+            $orderId = DB::table('ot_head')->insertGetId([
+                'pro_date' => now()->toDateString(),
+                'pro_tybe' => 9, // POS
+                'user' => auth()->id(),
+                'fat_total' => $validated['total'],
+                'fat_disc' => $validated['discount'] ?? 0,
+                'fat_net' => $validated['total'] - ($validated['discount'] ?? 0),
+                'info' => $validated['notes'] ?? '',
+                'isdeleted' => 0,
+                'crtime' => now(),
+                'mdtime' => now(),
+            ]);
 
-        $settingsObj = (object) $settings;
+            // إضافة تفاصيل الطلب
+            foreach ($validated['items'] as $item) {
+                DB::table('fat_details')->insert([
+                    'fat_id' => $orderId,
+                    'item_id' => $item['item_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['quantity'] * $item['price'],
+                    'crtime' => now(),
+                ]);
+            }
 
-        return view('pos::tables', [
-            'settings' => $settingsObj,
-            'lang' => $lang,
-            'stores' => $stores,
-            'employees' => $employees,
-            'funds' => $funds,
-            'categories' => $categories,
-            'items' => $items,
-            'tables' => $tables,
-        ]);
-    }
+            // تحديث حالة الطاولة إذا كانت موجودة
+            if ($validated['table_id']) {
+                POSTable::find($validated['table_id'])->update(['table_case' => 1]);
+            }
 
-    /**
-     * Show Time-based POS (converted from pos_time.php)
-     */
-    public function timeBased()
-    {
-        $settings = SidebarHelper::getSettings();
-        $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
+            DB::commit();
 
-        $stores = \DB::select("SELECT * FROM acc_head WHERE is_stock = 1 AND isdeleted = 0");
-        $employees = \DB::select("SELECT * FROM acc_head WHERE parent_id = 35 AND is_basic = 0 AND isdeleted = 0");
-        $clients = \DB::select("SELECT * FROM acc_head WHERE code LIKE '122%' AND is_basic = 0 AND isdeleted = 0");
-        $funds = \DB::select("SELECT * FROM acc_head WHERE is_fund = 1 AND is_basic = 0 AND isdeleted = 0");
-        $categories = \DB::select("SELECT * FROM item_group WHERE isdeleted = 0");
-        $items = \DB::select("SELECT * FROM myitems WHERE isdeleted = 0");
-        $tables = \DB::select("SELECT * FROM tables WHERE isdeleted = 0");
-
-        $settingsObj = (object) $settings;
-
-        return view('pos::time', [
-            'settings' => $settingsObj,
-            'lang' => $lang,
-            'stores' => $stores,
-            'employees' => $employees,
-            'clients' => $clients,
-            'funds' => $funds,
-            'categories' => $categories,
-            'items' => $items,
-            'tables' => $tables,
-        ]);
+            return response()->json([
+                'success' => true,
+                'order_id' => $orderId,
+                'message' => 'تم حفظ الطلب بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

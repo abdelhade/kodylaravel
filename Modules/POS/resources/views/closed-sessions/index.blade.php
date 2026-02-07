@@ -1,74 +1,73 @@
-@extends('dashboard.layout')
+@extends('layouts.master')
+
+@section('title', 'الجلسات المغلقة')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col">
-                            <h3>الشيفتات المغلقة</h3>
-                        </div>
-                    </div>
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>الشيفتات المغلقة</h5>
                 </div>
-                <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <strong>{{ session('success') }}</strong>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped table-bordered table-sm">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>الشيفت</th>
-                                    <th>التاريخ</th>
-                                    <th>المستخدم</th>
-                                    <th>وقت الانهاء</th>
-                                    <th>اجمالي المبيعات</th>
-                                    <th>المصاريف</th>
-                                    <th>بيان المصاريف</th>
-                                    <th>تسليم الكاش</th>
-                                    <th>نهاية الدرج</th>
-                                    <th>ملاحظات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($closedSessions as $index => $session)
-                                    <tr>
-                                        <td>{{ $session->shift }}</td>
-                                        <td>{{ $session->date }}</td>
-                                        <td class="bg-primary text-white">{{ $session->user }}</td>
-                                        <td>{{ $session->endtime }}</td>
-                                        <td class="bg-success text-white">{{ number_format($session->total_sales ?? 0, 2) }}</td>
-                                        <td class="bg-danger text-white">{{ number_format($session->expenses ?? 0, 2) }}</td>
-                                        <td>{{ $session->exp_notes ?? '--' }}</td>
-                                        <td class="bg-secondary text-white">{{ number_format($session->cash ?? 0, 2) }}</td>
-                                        <td class="bg-light">{{ number_format($session->fund_after ?? 0, 2) }}</td>
-                                        <td>{{ $session->info ?? '--' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="10" class="text-center">لا توجد شيفتات مغلقة</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="col-auto">
+                    <a href="{{ route('pos.closed-sessions.export') }}" class="btn btn-sm btn-success">
+                        <i class="fas fa-download me-1"></i>تصدير Excel
+                    </a>
                 </div>
             </div>
         </div>
-    </section>
+        <div class="card-body">
+            @if($sessions->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped table-bordered table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>الشيفت</th>
+                                <th>التاريخ</th>
+                                <th>المستخدم</th>
+                                <th>وقت الانهاء</th>
+                                <th>إجمالي المبيعات</th>
+                                <th>المصاريف</th>
+                                <th>ملاحظات المصاريف</th>
+                                <th>تسليم الكاش</th>
+                                <th>نهاية الدرج</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($sessions as $session)
+                                <tr>
+                                    <td>{{ $session->shift }}</td>
+                                    <td>{{ $session->date->format('Y-m-d') }}</td>
+                                    <td class="bg-primary text-white">{{ $session->user }}</td>
+                                    <td>{{ $session->endtime }}</td>
+                                    <td class="bg-success text-white">{{ number_format($session->total_sales, 2) }}</td>
+                                    <td class="bg-danger text-white">{{ number_format($session->expenses, 2) }}</td>
+                                    <td>{{ $session->exp_notes }}</td>
+                                    <td class="bg-secondary text-white">{{ number_format($session->cash, 2) }}</td>
+                                    <td class="bg-light">{{ number_format($session->fund_after, 2) }}</td>
+                                    <td>
+                                        <a href="{{ route('pos.closed-sessions.show', $session) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $sessions->links() }}
+                </div>
+            @else
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>لا توجد جلسات مغلقة حتى الآن
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection

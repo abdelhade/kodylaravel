@@ -468,13 +468,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('barcode_search') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'barcode_search']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-barcode"></i>
                                 <p>عرض سعر الصنف</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('items-start-balance.index') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'items_start_balance']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-balance-scale"></i>
                                 <p>ضبط الارصدة الافتتاحية</p>
                             </a>
@@ -509,12 +509,6 @@
                             <a href="/sales?q=po" class="nav-link -50">
                                 <i class="ml-1 fas fa-clipboard-list"></i>
                                 <p>أمر شراء</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('pos_po') }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-barcode"></i>
-                                <p>أمر شراء باركود</p>
                             </a>
                         </li>
                     </ul>
@@ -552,55 +546,39 @@
                     </ul>
                 </li>
 
-                <!-- ادارة الكاشير -->
+                <!-- نقاط البيع -->
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'pos-menu')">
-                        <i class="nav-icon fas fa-cash-register"></i>
+                        <i class="nav-icon fas fa-barcode"></i>
                         <p>
-                            ادارة الكاشير
+                            نقاط البيع
                             <i class="fas fa-angle-left right ms-auto"></i>
                         </p>
                     </a>
                     <ul class="nav nav-treeview" id="pos-menu"
                         style="display: none; background-color: rgba(255,255,255,0.05);">
                         <li class="nav-item">
-                            <a href="{{ route('pos.barcode') }}" class="nav-link -50">
+                            <a href="{{ route('pos.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-barcode"></i>
                                 <p>نقطة بيع باركود</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('pos.barcode-basic') }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-cash-register"></i>
-                                <p>نقطة بيع بسيطة</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('pos.tables.view') }}" class="nav-link -50">
+                            <a href="{{ route('pos.tables.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-utensils"></i>
-                                <p>نقطة بيع الطاولات</p>
+                                <p>إدارة الطاولات</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('pos.time') }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-clock"></i>
-                                <p>نقطة بيع الوقت</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('pos.tables') }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-table"></i>
-                                <p>ادارة الطاولات</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('pos.sessions') }}" class="nav-link -50">
+                            <a href="{{ route('pos.closed-sessions.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-history"></i>
                                 <p>الشيفتات المنتهية</p>
                             </a>
                         </li>
                     </ul>
                 </li>
+
+                
 
                 <!-- ادارة الموبايل -->
                 <li class="nav-item has-treeview">
@@ -640,7 +618,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('acc-report.index') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'acc_report']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-list"></i>
                                 <p>قائمة الحسابات مع الارصدة</p>
                             </a>
@@ -760,7 +738,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('start-balance.index') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'start_balance']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-balance-scale"></i>
                                 <p>الرصيد الافتتاحي للحسابات</p>
                             </a>
@@ -780,13 +758,13 @@
                     <ul class="nav nav-treeview" id="reports-menu"
                         style="display: none; background-color: rgba(255,255,255,0.05);">
                         <li class="nav-item">
-                            <a href="{{ route('reports.summary') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'summary']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-file-alt"></i>
                                 <p>كشف حساب</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('sales-reports.index') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'sales-reports']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-chart-bar"></i>
                                 <p>تقارير المبيعات</p>
                             </a>
@@ -798,13 +776,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('items_summery') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'items_summery']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-box"></i>
                                 <p>المبيعات اصناف</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('reps_cl') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'reps_cl']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-hospital"></i>
                                 <p>تقارير العيادات</p>
                             </a>
