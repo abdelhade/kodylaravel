@@ -551,6 +551,7 @@
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'pos-menu')">
                         <i class="nav-icon fas fa-barcode"></i>
                         <p>
+                            
                             نقاط البيع
                             <i class="fas fa-angle-left right ms-auto"></i>
                         </p>
