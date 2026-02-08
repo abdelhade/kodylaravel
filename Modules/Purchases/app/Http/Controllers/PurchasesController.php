@@ -1,68 +1,67 @@
 <?php
 
-namespace Modules\Sales\Http\Controllers;
+namespace Modules\Purchases\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-class SalesController extends Controller
+class PurchasesController extends Controller
 {
     // أنواع الفواتير
     const INVOICE_TYPES = [
-        'SALES' => 3,
-        'SALES_RETURN' => 11,
-        'SALES_ORDER' => 13,
-        'QUOTATION' => 14
+        'PURCHASE' => 4,
+        'PURCHASE_RETURN' => 10,
+        'PURCHASE_ORDER' => 12
     ];
 
     /**
-     * عرض صفحة فاتورة المبيعات
+     * عرض صفحة فاتورة المشتريات
      */
-    public function salesInvoice()
+    public function purchaseInvoice()
     {
-        $pro_tybe = self::INVOICE_TYPES['SALES'];
-        $invoice_title = 'فاتورة مبيعات';
+        $pro_tybe = self::INVOICE_TYPES['PURCHASE'];
+        $invoice_title = 'فاتورة مشتريات';
         $is_edit_mode = false;
         
         // Get settings and language
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
-        return view('sales::invoices.sales', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
+        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
     }
 
     /**
-     * عرض صفحة أمر بيع
+     * عرض صفحة فاتورة مردود مشتريات
      */
-    public function salesOrder()
+    public function purchaseReturn()
     {
-        $pro_tybe = self::INVOICE_TYPES['SALES_ORDER'];
-        $invoice_title = 'أمر بيع';
+        $pro_tybe = self::INVOICE_TYPES['PURCHASE_RETURN'];
+        $invoice_title = 'فاتورة مردود مشتريات';
         $is_edit_mode = false;
         
         // Get settings and language
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
-        return view('sales::invoices.sales', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
+        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
     }
 
     /**
-     * عرض صفحة عرض سعر
+     * عرض صفحة أمر شراء
      */
-    public function quotation()
+    public function purchaseOrder()
     {
-        $pro_tybe = self::INVOICE_TYPES['QUOTATION'];
-        $invoice_title = 'عرض سعر للعميل';
+        $pro_tybe = self::INVOICE_TYPES['PURCHASE_ORDER'];
+        $invoice_title = 'أمر شراء';
         $is_edit_mode = false;
         
         // Get settings and language
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
-        return view('sales::invoices.sales', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
+        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
     }
     
     /**
@@ -90,15 +89,15 @@ class SalesController extends Controller
         $invoice = DB::table('ot_head')->where('id', $id)->first();
         
         if (!$invoice) {
-            return redirect()->route('sales.invoice')->with('error', 'الفاتورة غير موجودة');
+            return redirect()->route('purchases.invoice')->with('error', 'الفاتورة غير موجودة');
         }
 
         $pro_tybe = $invoice->pro_tybe;
-        $invoice_title = 'تعديل فاتورة المبيعات';
+        $invoice_title = 'تعديل فاتورة المشتريات';
         $is_edit_mode = true;
         $invoice_data = $invoice;
         
-        return view('sales::invoices.sales', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'invoice_data'));
+        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'invoice_data'));
     }
 
     /**
@@ -111,7 +110,7 @@ class SalesController extends Controller
 
             $pro_tybe = $request->input('pro_tybe');
             $store_id = $request->input('store_id');
-            $acc2_id = $request->input('acc2_id');
+            $acc2_id = $request->input('acc2_id'); // المورد
             $emp_id = $request->input('emp_id');
             $pro_date = $request->input('pro_date', date('Y-m-d'));
             $headtotal = $request->input('headtotal', 0);
@@ -134,8 +133,8 @@ class SalesController extends Controller
                 'pro_date' => $pro_date,
                 'store_id' => $store_id,
                 'emp_id' => $emp_id,
-                'acc1' => $acc2_id,
-                'acc2' => $store_id,
+                'acc1' => $store_id,
+                'acc2' => $acc2_id,
                 'fat_total' => $headtotal,
                 'fat_disc' => $headdisc,
                 'fat_plus' => $headplus,
@@ -160,7 +159,7 @@ class SalesController extends Controller
                     'pro_id' => $last_op,
                     'item_id' => $item_id,
                     'u_val' => $u_val,
-                    'qty_out' => $qty * $u_val,
+                    'qty_in' => $qty * $u_val,
                     'price' => $price / $u_val,
                     'discount' => $disc,
                     'det_value' => $qty * ($price - $disc),
@@ -174,7 +173,7 @@ class SalesController extends Controller
 
             DB::commit();
 
-            return redirect()->route('sales.invoice')->with('success', 'تم حفظ الفاتورة بنجاح');
+            return redirect()->route('purchases.invoice')->with('success', 'تم حفظ الفاتورة بنجاح');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -219,8 +218,8 @@ class SalesController extends Controller
                 'pro_date' => $pro_date,
                 'store_id' => $store_id,
                 'emp_id' => $emp_id,
-                'acc1' => $acc2_id,
-                'acc2' => $store_id,
+                'acc1' => $store_id,
+                'acc2' => $acc2_id,
                 'fat_total' => $headtotal,
                 'fat_disc' => $headdisc,
                 'fat_plus' => $headplus,
@@ -246,7 +245,7 @@ class SalesController extends Controller
                     'pro_id' => $id,
                     'item_id' => $item_id,
                     'u_val' => $u_val,
-                    'qty_out' => $qty * $u_val,
+                    'qty_in' => $qty * $u_val,
                     'price' => $price / $u_val,
                     'discount' => $disc,
                     'det_value' => $qty * ($price - $disc),
@@ -260,7 +259,7 @@ class SalesController extends Controller
 
             DB::commit();
 
-            return redirect()->route('sales.index')->with('success', 'تم تحديث الفاتورة بنجاح');
+            return redirect()->route('purchases.index')->with('success', 'تم تحديث الفاتورة بنجاح');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -274,7 +273,7 @@ class SalesController extends Controller
     public function index()
     {
         $invoices = DB::table('ot_head')
-            ->where('pro_tybe', self::INVOICE_TYPES['SALES'])
+            ->where('pro_tybe', self::INVOICE_TYPES['PURCHASE'])
             ->where('isdeleted', 0)
             ->orderBy('id', 'desc')
             ->paginate(20);
@@ -282,30 +281,6 @@ class SalesController extends Controller
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
 
-        return view('sales::invoices.index', compact('invoices', 'settings', 'lang'));
-    }
-
-    /**
-     * حذف فاتورة
-     */
-    public function destroy($id)
-    {
-        try {
-            DB::beginTransaction();
-
-            // تحديث حالة الفاتورة إلى محذوفة
-            DB::table('ot_head')->where('id', $id)->update(['isdeleted' => 1]);
-
-            // تحديث حالة التفاصيل إلى محذوفة
-            DB::table('fat_details')->where('pro_id', $id)->update(['isdeleted' => 1]);
-
-            DB::commit();
-
-            return response()->json(['success' => true, 'message' => 'تم حذف الفاتورة بنجاح']);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
-        }
+        return view('purchases::invoices.index', compact('invoices', 'settings', 'lang'));
     }
 }

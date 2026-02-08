@@ -6,7 +6,7 @@
         <div class="container-fluid p-0 m-0">
             <center>
                 <h4 class="font-thin text-md text-white" style="font-size:2em;padding:15px;background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);border-radius: 10px 10px 0 0;margin:0;">
-                    فواتير المبيعات
+                    فواتير المشتريات
                 </h4>
             </center>
 
@@ -31,14 +31,14 @@
                     @endif
 
                     <div class="mb-3 text-left">
-                        <a href="{{ route('sales.invoice') }}" class="btn btn-success" style="background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);border: none;">
-                            <i class="fas fa-plus"></i> فاتورة مبيعات جديدة
+                        <a href="{{ route('purchases.invoice') }}" class="btn btn-success" style="background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);border: none;">
+                            <i class="fas fa-plus"></i> فاتورة مشتريات جديدة
                         </a>
-                        <a href="{{ route('sales.order') }}" class="btn btn-info" style="background: linear-gradient(135deg, #29b6f6 0%, #0288d1 100%);border: none;">
-                            <i class="fas fa-file-alt"></i> أمر بيع جديد
+                        <a href="{{ route('purchases.return') }}" class="btn btn-info" style="background: linear-gradient(135deg, #29b6f6 0%, #0288d1 100%);border: none;">
+                            <i class="fas fa-undo"></i> مردود مشتريات جديد
                         </a>
-                        <a href="{{ route('sales.quotation') }}" class="btn btn-warning" style="background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);border: none;">
-                            <i class="fas fa-quote-left"></i> عرض سعر جديد
+                        <a href="{{ route('purchases.order') }}" class="btn btn-warning" style="background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);border: none;">
+                            <i class="fas fa-file-alt"></i> أمر شراء جديد
                         </a>
                     </div>
 
@@ -48,7 +48,7 @@
                                 <tr>
                                     <th width="10%" class="text-center">رقم الفاتورة</th>
                                     <th width="12%">التاريخ</th>
-                                    <th width="25%">العميل</th>
+                                    <th width="25%">المورد</th>
                                     <th width="12%" class="text-center">الإجمالي</th>
                                     <th width="12%" class="text-center">الخصم</th>
                                     <th width="12%" class="text-center">الصافي</th>
@@ -62,15 +62,15 @@
                                     <td>{{ \Carbon\Carbon::parse($invoice->pro_date)->format('Y-m-d') }}</td>
                                     <td>
                                         @php
-                                            $client = DB::table('acc_head')->where('id', $invoice->acc2)->first();
+                                            $supplier = DB::table('acc_head')->where('id', $invoice->acc2)->first();
                                         @endphp
-                                        <span style="color: #00897b;font-weight: 600;">{{ $client->aname ?? 'غير محدد' }}</span>
+                                        <span style="color: #00897b;font-weight: 600;">{{ $supplier->aname ?? 'غير محدد' }}</span>
                                     </td>
                                     <td class="text-center">{{ number_format($invoice->fat_total, 2) }}</td>
                                     <td class="text-center" style="color: #d32f2f;">{{ number_format($invoice->fat_disc, 2) }}</td>
                                     <td class="text-center font-weight-bold" style="color: #00897b;">{{ number_format($invoice->fat_net, 2) }}</td>
                                     <td class="text-center">
-                                        <a href="{{ route('sales.edit', $invoice->id) }}" class="btn btn-sm btn-warning" title="تعديل">
+                                        <a href="{{ route('purchases.edit', $invoice->id) }}" class="btn btn-sm btn-warning" title="تعديل">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button class="btn btn-sm btn-danger" onclick="deleteInvoice({{ $invoice->id }})" title="حذف">
@@ -107,7 +107,7 @@
 <script>
 function deleteInvoice(id) {
     if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) {
-        fetch(`/sales/delete/${id}`, {
+        fetch(`/purchases/delete/${id}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -131,7 +131,7 @@ function deleteInvoice(id) {
 }
 
 function printInvoice(id) {
-    window.open(`/sales/print/${id}`, '_blank');
+    window.open(`/purchases/print/${id}`, '_blank');
 }
 </script>
 @endsection

@@ -494,21 +494,27 @@
                     <ul class="nav nav-treeview" id="purchases-menu"
                         style="display: none; background-color: rgba(255,255,255,0.05);">
                         <li class="nav-item">
-                            <a href="/sales?q=sale" class="nav-link -50">
+                            <a href="{{ route('purchases.invoice') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-file-invoice-dollar"></i>
                                 <p>فاتورة مشتريات</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/sales?q=resale" class="nav-link -50">
+                            <a href="{{ route('purchases.return') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-undo"></i>
                                 <p>فاتورة مردود مشتريات</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/sales?q=po" class="nav-link -50">
+                            <a href="{{ route('purchases.order') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-clipboard-list"></i>
                                 <p>أمر شراء</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('purchases.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-list"></i>
+                                <p>قائمة المشتريات</p>
                             </a>
                         </li>
                     </ul>
@@ -526,21 +532,27 @@
                     <ul class="nav nav-treeview" id="sales-menu"
                         style="display: none; background-color: rgba(255,255,255,0.05);">
                         <li class="nav-item">
-                            <a href="/sales?q=buy" class="nav-link -50">
+                            <a href="{{ route('sales.invoice') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-file-invoice-dollar"></i>
                                 <p>فاتورة مبيعات</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/sales?q=rebuy" class="nav-link -50">
-                                <i class="ml-1 fas fa-undo"></i>
+                            <a href="{{ route('sales.order') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-clipboard-list"></i>
                                 <p>أمر بيع</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/sales?q=offer" class="nav-link -50">
+                            <a href="{{ route('sales.quotation') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-handshake"></i>
                                 <p>عرض سعر للعميل</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('sales.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-list"></i>
+                                <p>قائمة المبيعات</p>
                             </a>
                         </li>
                     </ul>
@@ -551,7 +563,7 @@
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'pos-menu')">
                         <i class="nav-icon fas fa-barcode"></i>
                         <p>
-                            
+            
                             نقاط البيع
                             <i class="fas fa-angle-left right ms-auto"></i>
                         </p>
@@ -565,13 +577,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('pos.tables.index') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'tables']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-utensils"></i>
                                 <p>إدارة الطاولات</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('pos.closed-sessions.index') }}" class="nav-link -50">
+                            <a href="{{ route('legacy', ['page' => 'closed_sessions']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-history"></i>
                                 <p>الشيفتات المنتهية</p>
                             </a>
@@ -771,7 +783,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('operations_summary', ['q' => 'sale']) }}" class="nav-link -50">
+                            <a href="{{ route('purchases.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-shopping-bag"></i>
                                 <p>فواتير المشتريات</p>
                             </a>

@@ -2,39 +2,33 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Sales\Http\Controllers\SalesController;
-use Modules\Sales\Http\Controllers\InvoiceController;
-use Modules\Sales\Http\Controllers\SalesReportsController;
-use App\Http\Controllers\LegacyController;
 
-Route::middleware('check.auth')->group(function () {
-    // Resource routes
-    Route::resource('sales', SalesController::class)->names('sales');
+/*
+|--------------------------------------------------------------------------
+| Web Routes - Sales Module
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['web', 'check.auth'])->prefix('sales')->name('sales.')->group(function () {
+    // قائمة الفواتير
+    Route::get('/', [SalesController::class, 'index'])->name('index');
     
-    // Sales/Invoices routes (Partially converted - complex pages use LegacyController)
-    Route::get('/sales', [InvoiceController::class, 'index'])->name('sales.index');
-    Route::get('/sales/create', [InvoiceController::class, 'create'])->name('invoices.create');
-    // Complex invoice handling still uses LegacyController
-    Route::get('/sales/legacy', [LegacyController::class, 'handle'])->name('sales.legacy');
-    Route::post('/sales/legacy', [LegacyController::class, 'handle'])->name('sales.legacy.post');
+    // فاتورة مبيعات
+    Route::get('/invoice', [SalesController::class, 'salesInvoice'])->name('invoice');
     
-    // Sales Reports routes (Converted to Blade)
-    Route::get('/sales-reports', [SalesReportsController::class, 'index'])->name('sales-reports.index');
-    Route::get('/sales-by-day', [SalesReportsController::class, 'byDay'])->name('sales-reports.by-day');
-    Route::post('/sales-by-day', [SalesReportsController::class, 'byDay'])->name('sales-reports.by-day');
-    Route::get('/sales-by-hour', [SalesReportsController::class, 'byHour'])->name('sales-reports.by-hour');
-    Route::post('/sales-by-hour', [SalesReportsController::class, 'byHour'])->name('sales-reports.by-hour');
-    Route::get('/sales-by-week', [SalesReportsController::class, 'byWeek'])->name('sales-reports.by-week');
-    Route::post('/sales-by-week', [SalesReportsController::class, 'byWeek'])->name('sales-reports.by-week');
-    Route::get('/sales-by-month', [SalesReportsController::class, 'byMonth'])->name('sales-reports.by-month');
-    Route::post('/sales-by-month', [SalesReportsController::class, 'byMonth'])->name('sales-reports.by-month');
+    // أمر بيع
+    Route::get('/order', [SalesController::class, 'salesOrder'])->name('order');
     
-    // Operations Summary route (Converted to Blade)
-    Route::get('/operations_summary', [SalesReportsController::class, 'operationsSummary'])->name('operations_summary');
-    Route::post('/operations_summary', [SalesReportsController::class, 'operationsSummary'])->name('operations_summary.post');
+    // عرض سعر
+    Route::get('/quotation', [SalesController::class, 'quotation'])->name('quotation');
     
-    // Items Summary route (Converted to Blade)
-    Route::get('/items_summery', [SalesReportsController::class, 'itemsSummary'])->name('items_summery');
-    Route::get('/items_summery', [LegacyController::class, 'handle'])->name('items_summery');
-    Route::get('/top_products_report', [LegacyController::class, 'handle'])->name('top_products_report');
-    Route::get('/stagnant-items-report', [LegacyController::class, 'handle'])->name('stagnant_items_report');
+    // حفظ فاتورة
+    Route::post('/store', [SalesController::class, 'store'])->name('store');
+    
+    // تعديل فاتورة
+    Route::get('/edit/{id}', [SalesController::class, 'edit'])->name('edit');
+    Route::put('/update/{id}', [SalesController::class, 'update'])->name('update');
+    
+    // حذف فاتورة
+    Route::delete('/delete/{id}', [SalesController::class, 'destroy'])->name('destroy');
 });

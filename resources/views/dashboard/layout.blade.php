@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>
-        {{ isset($settings['lang_title']) ? $settings['lang_title'] : (isset($lang['lang_title']) ? $lang['lang_title'] : 'Dashboard') }}
+        {{ data_get($settings, 'lang_title') ?? data_get($lang, 'lang_title') ?? 'Dashboard' }}
     </title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,16 +73,12 @@
         }
 
         .content-wrapper {
-            background-color: {{ isset($settings['bodycolor']) ? $settings['bodycolor'] : '#f4f6f9' }};
+            background-color: {{ data_get($settings, 'bodycolor', '#f4f6f9') }};
         }
 
         .nav-link {
             color: black !important;
             border: 1;
-        }
-
-        .content-wrapper {
-            background-color: {{ isset($settings['bodycolor']) ? $settings['bodycolor'] : '#f4f6f9' }};
         }
 
         /* Font Awesome Font Faces */
