@@ -193,6 +193,7 @@
                                 </div>
                                 <div class="row mb-2">
                                     <div class='col-3'><strong>الخصم:</strong></div>
+                                    
                                     <div class='col-8'>
                                         <input type="number" name="headdisc" id="headdisc"
                                             class="form-control text-center" value="0" step="0.01">
