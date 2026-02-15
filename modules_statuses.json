@@ -22,5 +22,6 @@
     "Invoices": true,
     "Logs": true,
     "Barcode": true,
-    "Print": true
+    "Print": true,
+    "Purchases": true
 }

@@ -61,10 +61,10 @@
                                         <td>{{ $account->phone ?? '-' }}</td>
                                         <td>{{ $account->id }}</td>
                                         <td>
-                                            <a href="{{ route('accounts.edit', ['id' => $account->id]) }}" class="btn btn-warning">
+                                            <a href="/edit_account?id={{ $account->id }}" class="btn btn-warning">
                                                 <i class="fa fa-pen text-yellow-50"></i>
                                             </a>
-                                            <a href="{{ route('accounts.destroy', ['id' => $account->id]) }}" class="btn btn-danger" onclick="return confirm('هل تريد حذف هذا الحساب؟')">
+                                            <a href="/edit_account/delete?id={{ $account->id }}" class="btn btn-danger" onclick="return confirm('هل تريد حذف هذا الحساب؟')">
                                                 <i class="fa fa-trash text-yellow-50"></i>
                                             </a>
                                         </td>

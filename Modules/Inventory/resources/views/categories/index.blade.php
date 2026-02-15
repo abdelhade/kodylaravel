@@ -1,14 +1,22 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h2>التصنيفات</h2>
-                </div>
-                <div class="card-body">
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 style="font-size: 20px; font-weight: bolder;">التصنيفات</h3>
+                <small class="text-muted">تصنيفات إضافية للأصناف لمرونة أكبر في التقارير</small>
+            </div>
+        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 style="font-size: 20px; font-weight: bolder;">إدارة التصنيفات</h5>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">
+                    <i class="fa fa-plus"></i> إضافة تصنيف
+                </button>
+            </div>
+            <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
@@ -16,20 +24,14 @@
                         <div class="alert alert-danger">{{ session('error') }}</div>
                     @endif
 
-                    <div class="col-md-4 border rounded m-0 p-3 mb-3">
-                        <form action="{{ route('categories.store') }}" method="post">
-                            @csrf
-                            <input type="text" name="gname" class="form-control" 
-                                   placeholder="أدخل تصنيف جديد" value="{{ old('gname') }}" required>
-                            @error('gname')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                            <button type="submit" class="btn btn-info btn-block mt-2">حفظ</button>
-                        </form>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#addCategoryModal">
+                            <i class="fa fa-plus"></i> إضافة تصنيف جديد
+                        </button>
                     </div>
 
-                    <div class="table-responsive" id="">
-                        <table class="table table-bordered table-hover">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -40,49 +42,58 @@
                             <tbody>
                                 @forelse($categories as $index => $category)
                                     <tr>
-                                        <form action="{{ route('categories.update', ['id' => $category->id]) }}" method="post">
-                                            @csrf
-                                            @method('PUT')
-                                            <th>{{ $index + 1 }}</th>
-                                            <th>
-                                                <input class="form-control" type="text" value="{{ $category->gname }}" name="gname" required>
-                                            </th>
-                                            <th>
-                                                <button type="submit" class="btn btn-sm btn-warning">
-                                                    <i class="fa fa-pen"></i>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            {{ $category->gname }}
+                                        </td>
+                                        <td>
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        data-toggle="modal" data-target="#editModal{{ $category->id }}">
+                                                    <i class="fa fa-edit"></i>
                                                 </button>
-                                                <button type="button" class="btn bg-red-600 text-red-100 btn-sm" 
-                                                        data-toggle="modal" data-target="#deleteModal{{ $category->id }}">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </th>
-                                        </form>
+                                                <form action="{{ route('categories.destroy', ['id' => $category->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا التصنيف؟');">
+                                                    @csrf
+                                                    @method('DELETE')                                                    
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                     </tr>
 
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" id="deleteModal{{ $category->id }}">
+                                    <!-- Edit Modal -->
+                                    <div class="modal fade" id="editModal{{ $category->id }}">
                                         <div class="modal-dialog">
-                                            <div class="modal-content bg-danger">
+                                            <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h4 class="modal-title">تحذير</h4>
+                                                    <h4 class="modal-title">تعديل التصنيف</h4>
                                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
                                                 </div>
-                                                <div class="modal-body">
-                                                    <p>هل تريد بالتأكيد حذف {{ $category->gname }}؟</p>
-                                                </div>
-                                                <div class="modal-footer justify-content-between">
-                                                    <button type="button" class="btn btn-outline-light" data-dismiss="modal">إلغاء</button>
-                                                    <form action="{{ route('categories.destroy', ['id' => $category->id]) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-light">حذف</button>
-                                                    </form>
-                                                </div>
+                                                <form action="{{ route('categories.update', ['id' => $category->id]) }}" method="post">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="modal-body">
+                                                        <div class="form-group">
+                                                            <label for="gname{{ $category->id }}">اسم التصنيف</label>
+                                                            <input type="text" class="form-control" id="gname{{ $category->id }}" 
+                                                                   name="gname" value="{{ $category->gname }}" required>
+                                                            @error('gname')
+                                                                <span class="text-danger">{{ $message }}</span>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                                                        <button type="submit" class="btn btn-success">حفظ التعديلات</button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
+
+
                                 @empty
                                     <tr>
                                         <td colspan="3" class="text-center">لا توجد تصنيفات</td>
@@ -91,9 +102,38 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</section>
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">إضافة تصنيف جديد</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('categories.store') }}" method="post">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="newCategoryName">اسم التصنيف</label>
+                            <input type="text" class="form-control" id="newCategoryName" 
+                                   name="gname" placeholder="أدخل تصنيف جديد" value="{{ old('gname') }}" required>
+                            @error('gname')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-info">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection

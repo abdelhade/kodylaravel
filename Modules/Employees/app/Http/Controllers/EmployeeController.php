@@ -53,6 +53,7 @@ class EmployeeController extends Controller
      */
     public function create()
     {
+        \Log::info('Employee create page accessed');
         // Get dropdown data
         $jobs = DB::table('jops')->get();
         $departments = DB::table('departments')->get();
@@ -72,6 +73,8 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('Employee store request data:', $request->all());
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:6|max:50',
             'number' => 'nullable|string',
@@ -85,6 +88,7 @@ class EmployeeController extends Controller
         ]);
 
         if ($validator->fails()) {
+            \Log::warning('Employee store validation failed:', $validator->errors()->toArray());
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -98,99 +102,120 @@ class EmployeeController extends Controller
                 ->withInput();
         }
 
-        $imageName = null;
-        if ($request->hasFile('imgs')) {
-            $file = $request->file('imgs');
-            $extension = $file->getClientOriginalExtension();
-            $allowedExtensions = ['jpg', 'png', 'gif', 'jpeg'];
-            
-            if (!in_array(strtolower($extension), $allowedExtensions)) {
-                return redirect()->back()
-                    ->with('error', 'الملف المحمل ليس صورة أو امتداد غير مسموح به')
-                    ->withInput();
+        try {
+            DB::beginTransaction();
+
+            $imageName = null;
+            if ($request->hasFile('imgs')) {
+                $file = $request->file('imgs');
+                $extension = $file->getClientOriginalExtension();
+                $allowedExtensions = ['jpg', 'png', 'gif', 'jpeg'];
+                
+                if (!in_array(strtolower($extension), $allowedExtensions)) {
+                    return redirect()->back()
+                        ->with('error', 'الملف المحمل ليس صورة أو امتداد غير مسموح به')
+                        ->withInput();
+                }
+
+                if ($file->getSize() > 20000000) {
+                    return redirect()->back()
+                        ->with('error', 'بعض الملفات أكبر من اللازم 20 ميجا بايت')
+                        ->withInput();
+                }
+
+                $imageName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . rand(1, 1000000) . '.' . $extension;
+                
+                // Ensure assets directory exists
+                if (!file_exists(public_path('assets'))) {
+                    mkdir(public_path('assets'), 0777, true);
+                }
+                
+                $file->move(public_path('assets'), $imageName);
             }
 
-            if ($file->getSize() > 20000000) {
-                return redirect()->back()
-                    ->with('error', 'بعض الملفات أكبر من اللازم 20 ميجا بايت')
-                    ->withInput();
+            // Insert employee
+            $employeeId = DB::table('employees')->insertGetId([
+                'name' => $request->name,
+                'info' => $request->info ?? null,
+                'imgs' => $imageName,
+                'email' => $request->email ?? null,
+                'number' => $request->number ?? null,
+                'dateofbirth' => $request->dateofbirth ?? null,
+                'gender' => $request->gender,
+                'address' => $request->address ?? null,
+                'address2' => $request->address2 ?? null,
+                'town' => $request->town ?? null,
+                'jop' => $request->jop,
+                'department' => $request->department ?? null,
+                'joptybe' => $request->joptybe ?? null,
+                'joplevel' => $request->joplevel ?? null,
+                'dateofhire' => $request->dateofhire ?? null,
+                'dateofend' => $request->dateofend ?? null,
+                'shift' => $request->shift ?? null,
+                'salary' => $request->salary ?? null,
+                'basma_id' => $request->basmaid ?? null,
+                'password' => $request->password ?? null,
+                'basma_name' => $request->basmaname ?? null,
+                'ent_tybe' => $request->ent_tybe ?? null,
+                'hour_extra' => $request->hour_extra ?? null,
+                'day_extra' => $request->day_extra ?? null,
+                'active' => $request->has('active') ? 1 : 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Create account for employee
+            $lastAccount = DB::table('acc_head')
+                ->where('code', 'like', '213%')
+                ->where('is_basic', 0)
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($lastAccount) {
+                $acccode = explode('213', $lastAccount->code);
+                $lstacc = $acccode[1] ?? '000';
+                $lstaccInt = (int)$lstacc;
+                $lstaccInt++;
+                $lstaccNew = sprintf("%03d", $lstaccInt);
+                $lastId = '213' . $lstaccNew;
+            } else {
+                $lastId = '213001';
             }
 
-            $imageName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . rand(1, 1000000) . '.' . $extension;
-            $file->move(public_path('assets'), $imageName);
+            DB::table('acc_head')->insert([
+                'code' => $lastId,
+                'aname' => $request->name,
+                'is_basic' => 0,
+                'rentable' => 0,
+                'is_fund' => 0,
+                'parent_id' => 35, // Financial account parent
+                'is_stock' => 0,
+                'secret' => 0,
+                'kind' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Log process
+            DB::table('process')->insert([
+                'type' => 'add employee',
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('employees.index')
+                ->with('success', 'تم إضافة الموظف بنجاح');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error saving employee: ' . $e->getMessage(), [
+                'stack' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()
+                ->with('error', 'حدث خطأ أثناء الحفظ: ' . $e->getMessage())
+                ->withInput();
         }
-
-        // Insert employee
-        $employeeId = DB::table('employees')->insertGetId([
-            'name' => $request->name,
-            'info' => $request->info ?? null,
-            'imgs' => $imageName,
-            'email' => $request->email ?? null,
-            'number' => $request->number ?? null,
-            'dateofbirth' => $request->dateofbirth ?? null,
-            'gender' => $request->gender,
-            'address' => $request->address ?? null,
-            'address2' => $request->address2 ?? null,
-            'town' => $request->town ?? null,
-            'jop' => $request->jop,
-            'department' => $request->department ?? null,
-            'joptybe' => $request->joptybe ?? null,
-            'joplevel' => $request->joplevel ?? null,
-            'dateofhire' => $request->dateofhire ?? null,
-            'dateofend' => $request->dateofend ?? null,
-            'shift' => $request->shift ?? null,
-            'salary' => $request->salary ?? null,
-            'basma_id' => $request->basmaid ?? null,
-            'password' => $request->password ?? null,
-            'basma_name' => $request->basmaname ?? null,
-            'ent_tybe' => $request->ent_tybe ?? null,
-            'hour_extra' => $request->hour_extra ?? null,
-            'day_extra' => $request->day_extra ?? null,
-            'active' => $request->has('active') ? 1 : 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Create account for employee
-        $lastAccount = DB::table('acc_head')
-            ->where('code', 'like', '213%')
-            ->where('is_basic', 0)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastAccount) {
-            $acccode = explode('213', $lastAccount->code);
-            $lstacc = $acccode[1] ?? '000';
-            $lstaccInt = (int)$lstacc;
-            $lstaccInt++;
-            $lstaccNew = sprintf("%03d", $lstaccInt);
-            $lastId = '213' . $lstaccNew;
-        } else {
-            $lastId = '213001';
-        }
-
-        DB::table('acc_head')->insert([
-            'code' => $lastId,
-            'aname' => $request->name,
-            'is_basic' => 0,
-            'rentable' => 0,
-            'is_fund' => 0,
-            'parent_id' => 35,
-            'is_stock' => 0,
-            'secret' => 0,
-            'kind' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Log process
-        DB::table('process')->insert([
-            'type' => 'add employee',
-            'created_at' => now(),
-        ]);
-
-        return redirect()->route('employees.index')
-            ->with('success', 'تم إضافة الموظف بنجاح');
     }
 
     /**

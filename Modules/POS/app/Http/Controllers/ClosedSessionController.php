@@ -3,56 +3,57 @@
 namespace Modules\POS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Helpers\SidebarHelper;
-use Illuminate\Http\Request;
+use Modules\POS\Models\ClosedSession;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class ClosedSessionController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        $closedSessions = DB::table('closed_orders')
-            ->orderBy('id', 'desc')
-            ->get();
-
-        $settings = SidebarHelper::getSettings();
-        $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
-
-        return view('pos::closed-sessions.index', compact('closedSessions', 'settings', 'lang', ));
+        $this->middleware('check.auth');
     }
 
+    /**
+     * عرض قائمة الجلسات المغلقة
+     */
+    public function index()
+    {
+        $sessions = ClosedSession::orderBy('id', 'desc')->paginate(20);
+        return view('pos::closed-sessions.index', compact('sessions'));
+    }
+
+    /**
+     * إغلاق الشيفت الحالي
+     */
     public function close(Request $request)
     {
-        $userId = session('userid');
-        if (!$userId) {
-            return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
-        }
-
-        $shiftDate = date('Y-m-d');
-        $shiftTime = date('H:i:s');
-
         try {
-            // Calculate sales for current user today
+            $userId = auth()->id();
+            $shiftDate = now()->toDateString();
+            $shiftTime = now()->toTimeString();
+
+            // حساب مبيعات المستخدم الحالي لليوم
             $salesData = DB::table('ot_head')
+                ->selectRaw('COUNT(*) as total_orders, COALESCE(SUM(fat_net), 0) as total_sales')
                 ->whereDate('pro_date', $shiftDate)
-                ->where('pro_tybe', 9)
+                ->where('pro_tybe', 9) // POS
                 ->where('isdeleted', 0)
                 ->where('fat_net', '>', 0)
                 ->where('user', $userId)
-                ->selectRaw('COUNT(*) as total_orders, COALESCE(SUM(fat_net), 0) as total_sales')
                 ->first();
 
-            $totalOrders = intval($salesData->total_orders ?? 0);
-            $totalSales = floatval($salesData->total_sales ?? 0);
+            $totalOrders = $salesData->total_orders ?? 0;
+            $totalSales = $salesData->total_sales ?? 0;
 
-            // Get user name
-            $userAccount = DB::table('acc_head')->where('id', $userId)->first();
-            $username = $userAccount->aname ?? 'Unknown';
+            // جلب اسم المستخدم
+            $user = DB::table('acc_head')->find($userId);
+            $username = $user->aname ?? 'Unknown';
 
-            // Insert closed shift record
-            $shiftNumber = date('Ymd') . '_' . $userId;
+            // إدراج سجل إغلاق الشيفت
+            $shiftNumber = now()->format('Ymd') . '_' . $userId;
             
-            DB::table('closed_orders')->insert([
+            ClosedSession::create([
                 'shift' => $shiftNumber,
                 'date' => $shiftDate,
                 'user' => $username,
@@ -62,23 +63,74 @@ class ClosedSessionController extends Controller
                 'exp_notes' => 'إغلاق تلقائي',
                 'cash' => $totalSales,
                 'fund_after' => $totalSales,
-                'info' => 'إغلاق شيفت تلقائي - عدد الطلبات: ' . $totalOrders,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'info' => "إغلاق شيفت تلقائي - عدد الطلبات: $totalOrders",
+                'info2' => 'auto_close',
+                'tenant' => 1,
+                'branch' => 1,
             ]);
 
-            if ($totalOrders > 0) {
-                $message = "تم إغلاق الشيفت بنجاح - إجمالي مبيعاتك: " . number_format($totalSales, 2) . " ج.م (" . $totalOrders . " طلب)";
-            } else {
-                $message = "تم إغلاق الشيفت - لا توجد مبيعات لك اليوم";
-            }
+            $message = $totalOrders > 0 
+                ? "تم إغلاق الشيفت بنجاح - إجمالي مبيعاتك: " . number_format($totalSales, 2) . " ج.م (" . $totalOrders . " طلب)"
+                : "تم إغلاق الشيفت - لا توجد مبيعات لك اليوم";
 
-            return redirect()->route('pos.sessions')
+            return redirect()->route('pos.closed-sessions.index')
                 ->with('success', $message);
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'حدث خطأ أثناء إغلاق الشيفت: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * عرض تفاصيل جلسة مغلقة
+     */
+    public function show(ClosedSession $session)
+    {
+        return view('pos::closed-sessions.show', compact('session'));
+    }
+
+    /**
+     * تصدير الجلسات إلى Excel
+     */
+    public function export()
+    {
+        $sessions = ClosedSession::all();
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="closed_sessions_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function() use ($sessions) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
+            
+            // رؤوس الأعمدة
+            fputcsv($file, [
+                'الشيفت', 'التاريخ', 'المستخدم', 'وقت الانهاء',
+                'إجمالي المبيعات', 'المصاريف', 'ملاحظات المصاريف',
+                'تسليم الكاش', 'نهاية الدرج', 'ملاحظات'
+            ]);
+
+            // البيانات
+            foreach ($sessions as $session) {
+                fputcsv($file, [
+                    $session->shift,
+                    $session->date,
+                    $session->user,
+                    $session->endtime,
+                    $session->total_sales,
+                    $session->expenses,
+                    $session->exp_notes,
+                    $session->cash,
+                    $session->fund_after,
+                    $session->info,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

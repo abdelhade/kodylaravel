@@ -22,7 +22,7 @@ Route::middleware('check.auth')->group(function () {
     Route::post('/add_account', [AccountController::class, 'store'])->name('accounts.store');
     Route::get('/edit_account', [AccountController::class, 'edit'])->name('accounts.edit'); // Uses ?id= query param
     Route::put('/edit_account/update', [AccountController::class, 'update'])->name('accounts.update'); // Uses ?id= query param
-    Route::get('/edit_account/delete', [AccountController::class, 'destroy'])->name('accounts.destroy'); // Uses ?id= query param
+    Route::get('/edit_account/delete', [AccountController::class, 'destroy'])->name('accounts.delete'); // Uses ?id= query param
     
     // Journals routes (Converted to Blade)
     Route::get('/daily_journal', [JournalController::class, 'index'])->name('journals.index');
@@ -55,7 +55,7 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/add_voucher/delete', [VoucherController::class, 'destroy'])->name('vouchers.destroy'); // Uses ?id= query param
     
     // Legacy routes - التقارير (الحسابات)
-    Route::get('/summary', [LegacyController::class, 'handle'])->name('summary');
+    Route::match(['get', 'post'], '/summary', [LegacyController::class, 'handle'])->name('summary');
     
     // Rents routes (Converted to Blade)
     Route::get('/rentables', [RentController::class, 'index'])->name('rents.index');

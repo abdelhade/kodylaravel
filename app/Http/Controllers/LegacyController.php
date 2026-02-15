@@ -175,4 +175,115 @@ class LegacyController extends Controller
 
         return response($content);
     }
+
+    /**
+     * Show legacy page by page name
+     */
+    public function show(Request $request, $page)
+    {
+        // Map of page names to PHP files
+        $fileMap = [
+            'barcode_search' => 'barcode_search.php',
+            'items_start_balance' => 'items_start_balance.php',
+            'acc_report' => 'acc_report.php',
+            'start_balance' => 'start_balance.php',
+            'summary' => 'summary.php',
+            'sales-reports' => 'sales-reports.php',
+            'items_summery' => 'items_summery.php',
+            'reps_cl' => 'reps_cl.php',
+        ];
+
+        $phpFile = $fileMap[$page] ?? $page . '.php';
+        $filePath = base_path("native/{$phpFile}");
+
+        // Check if file exists
+        if (!file_exists($filePath)) {
+            Log::warning('Legacy file not found', [
+                'page' => $page,
+                'file' => $phpFile,
+                'path' => $filePath,
+                'user_id' => session('userid'),
+            ]);
+            abort(404, "File not found: {$phpFile}");
+        }
+
+        // Start PHP session first (legacy files expect this)
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Sync Laravel session with native $_SESSION
+        $sessionData = Session::all();
+        foreach ($sessionData as $key => $value) {
+            $_SESSION[$key] = $value;
+        }
+
+        // Preserve query parameters for legacy files
+        foreach ($request->query() as $key => $value) {
+            $_GET[$key] = $value;
+            $_REQUEST[$key] = $value;
+        }
+
+        // Preserve POST data if exists
+        if ($request->isMethod('post')) {
+            $_POST = [];
+            $_REQUEST = [];
+            foreach ($request->all() as $key => $value) {
+                $_POST[$key] = $value;
+                $_REQUEST[$key] = $value;
+            }
+            // Preserve files if uploaded
+            if ($request->hasFile('*')) {
+                foreach ($request->allFiles() as $key => $file) {
+                    $_FILES[$key] = [
+                        'name' => $file->getClientOriginalName(),
+                        'type' => $file->getMimeType(),
+                        'tmp_name' => $file->getRealPath(),
+                        'error' => $file->getError(),
+                        'size' => $file->getSize(),
+                    ];
+                }
+            }
+        } else {
+            // Clear POST and FILES for GET requests
+            $_POST = [];
+            $_FILES = [];
+        }
+
+        // Change directory to native folder
+        $oldDir = getcwd();
+        chdir(base_path('native'));
+
+        // Capture output and errors
+        ob_start();
+        try {
+            include $filePath;
+            $content = ob_get_clean();
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            chdir($oldDir);
+            
+            // Log error with context
+            Log::error('Error loading legacy file', [
+                'page' => $page,
+                'file' => $phpFile,
+                'path' => $filePath,
+                'user_id' => session('userid'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Log error but don't expose it to user in production
+            if (config('app.debug')) {
+                return response("Error loading file: {$phpFile}<br>" . $e->getMessage(), 500);
+            }
+            
+            abort(500, "Error loading file: {$phpFile}");
+        }
+
+        // Restore directory
+        chdir($oldDir);
+
+        return response($content);
+    }
 }

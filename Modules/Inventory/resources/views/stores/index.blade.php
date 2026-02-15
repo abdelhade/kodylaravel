@@ -1,23 +1,21 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="card card-light">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-lg-4"><h3>ادارة المخازن</h3></div>
-                        <div class="col-lg-4"></div>
-                        <div class="col-lg-4 text-right">
-                            <a href="{{ route('stores.create') }}" id="addNewElement">
-                                <p class="btn btn-large btn-dark">جديد(F3)</p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body">
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="mb-0">إدارة المخازن</h3>
+                <small class="text-muted">تعريف مخازن النظام وربطها بالحسابات المناسبة</small>
+            </div>
+            <div>
+                <a href="{{ route('stores.create') }}" id="addNewElement" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> مخزن جديد (F3)
+                </a>
+            </div>
+        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
@@ -26,7 +24,7 @@
                     @endif
 
                     <div class="table">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered table-hover align-middle">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -56,11 +54,10 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

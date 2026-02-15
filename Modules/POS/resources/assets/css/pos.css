@@ -1,0 +1,254 @@
+/* POS System Styles */
+
+:root {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+}
+
+body {
+    background: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tables Grid */
+.table-btn {
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+    background: white;
+    color: #333;
+    font-weight: 500;
+}
+
+.table-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.table-btn.occupied {
+    background: var(--warning-color);
+    color: white;
+    border-color: var(--warning-color);
+}
+
+.table-btn.maintenance {
+    background: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+}
+
+/* Order Panel */
+.order-panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.order-item {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.order-item-price {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+/* Totals */
+.totals-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.total-row:last-child {
+    border-bottom: none;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--success-color);
+}
+
+/* Buttons */
+.btn-save-order {
+    background: var(--success-color);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-save-order:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    border-radius: 6px;
+    border: 2px solid #dee2e6;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Alerts */
+.alert {
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tables */
+.table {
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #343a40;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .table-btn {
+        height: 60px !important;
+        font-size: 12px;
+    }
+
+    .order-panel {
+        margin-top: 20px;
+    }
+}
+
+/* Fullscreen */
+.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+}
+
+/* Loading Spinner */
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Badge */
+.badge {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Modal */
+.modal-content {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    border-bottom: 2px solid #dee2e6;
+    background: #f8f9fa;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    padding: 10px 12px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Utility Classes */
+.text-success { color: var(--success-color) !important; }
+.text-danger { color: var(--danger-color) !important; }
+.text-warning { color: var(--warning-color) !important; }
+.text-info { color: var(--info-color) !important; }
+
+.bg-success { background: var(--success-color) !important; }
+.bg-danger { background: var(--danger-color) !important; }
+.bg-warning { background: var(--warning-color) !important; }
+.bg-info { background: var(--info-color) !important; }
