@@ -55,7 +55,7 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/add_voucher/delete', [VoucherController::class, 'destroy'])->name('vouchers.destroy'); // Uses ?id= query param
     
     // Legacy routes - التقارير (الحسابات)
-    Route::get('/summary', [LegacyController::class, 'handle'])->name('summary');
+    Route::match(['get', 'post'], '/summary', [LegacyController::class, 'handle'])->name('summary');
     
     // Rents routes (Converted to Blade)
     Route::get('/rentables', [RentController::class, 'index'])->name('rents.index');

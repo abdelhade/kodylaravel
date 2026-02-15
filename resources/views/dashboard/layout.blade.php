@@ -81,6 +81,10 @@
             border: 1;
         }
 
+        .content-wrapper {
+            background-color: {{ isset($settings['bodycolor']) ? $settings['bodycolor'] : '#f4f6f9' }};
+        }
+
         /* Font Awesome Font Faces */
         @font-face {
             font-family: "Font Awesome 5 Free";

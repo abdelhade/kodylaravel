@@ -33,21 +33,23 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3" id="tablesContainer">
-                        @forelse($tables as $table)
-                            <div class="col-md-4 col-lg-3">
-                                <button class="btn btn-outline-secondary w-100 table-btn" 
-                                        data-table-id="{{ $table->id }}"
-                                        data-table-name="{{ $table->tname }}"
-                                        style="height: 80px; font-size: 14px;">
-                                    <div>{{ $table->tname }}</div>
-                                    <small class="text-muted">{{ $table->getStatusLabel() }}</small>
-                                </button>
-                            </div>
-                        @empty
+                        @if($tables->count() > 0)
+                            @foreach($tables as $table)
+                                <div class="col-md-4 col-lg-3">
+                                    <button class="btn btn-outline-secondary w-100 table-btn" 
+                                            data-table-id="{{ $table->id }}"
+                                            data-table-name="{{ $table->tname }}"
+                                            style="height: 80px; font-size: 14px;">
+                                        <div>{{ $table->tname }}</div>
+                                        <small class="text-muted">{{ $table->getStatusLabel() }}</small>
+                                    </button>
+                                </div>
+                            @endforeach
+                        @else
                             <div class="col-12">
                                 <p class="text-center text-muted">لا توجد طاولات متاحة</p>
                             </div>
-                        @endforelse
+                        @endif
                     </div>
                 </div>
             </div>

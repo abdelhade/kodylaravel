@@ -9,11 +9,6 @@ use Illuminate\Http\Request;
 
 class POSController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('check.auth');
-    }
-
     /**
      * عرض واجهة نقاط البيع الرئيسية
      */
@@ -35,7 +30,7 @@ class POSController extends Controller
             ->where('is_fund', 1)
             ->get();
 
-        return view('pos::pos.index', compact('tables', 'stores', 'employees', 'customers', 'funds'));
+        return view('pos::index', compact('tables', 'stores', 'employees', 'customers', 'funds'));
     }
 
     /**
@@ -120,7 +115,7 @@ class POSController extends Controller
             foreach ($validated['items'] as $item) {
                 DB::table('fat_details')->insert([
                     'fat_id' => $orderId,
-                    'item_id' => $item['item_id'],
+                    'item_id' => $item['id'],
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                     'total' => $item['quantity'] * $item['price'],

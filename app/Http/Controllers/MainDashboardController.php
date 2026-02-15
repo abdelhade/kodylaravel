@@ -50,17 +50,17 @@ class MainDashboardController extends Controller
         
         // Get statistics
         $stats = [
-            'due_installments' => DB::table('myinstallments')->where('ins_case', 2)->count(),
+            'due_installments' => 0,
             'clients' => DB::table('acc_head')->where('is_basic', 0)
                 ->where('isdeleted', 0)
                 ->where('code', 'like', '122%')
                 ->count(),
-            'sessions' => DB::table('session_time')->count(),
+            'sessions' => 0,
             'sales_count' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->count(),
-            'sales_total' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->sum('pro_value'),
-            'tasks' => DB::table('tasks')->count(),
-            'pending_tasks' => DB::table('tasks')->whereNull('isdeleted')->count(),
-            'reservations' => DB::table('reservations')->whereNotNull('duration')->count(),
+            'sales_total' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->sum('fat_net'),
+            'tasks' => 0,
+            'pending_tasks' => 0,
+            'reservations' => 0,
         ];
         
         // Get recent accounts for main_tables
@@ -93,48 +93,21 @@ class MainDashboardController extends Controller
             ->get();
         
         // Get recent sessions
-        $recentSessions = DB::table('session_time')
-            ->orderBy('crtime', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function($session) {
-                $user = DB::table('users')->where('id', $session->user)->first();
-                $session->user_name = $user ? $user->uname : '__';
-                return $session;
-            });
+        $recentSessions = []; // Table session_time doesn't exist
         
         // Get sales statistics
         $salesStats = [
-            'last_invoice' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->orderBy('id', 'desc')->value('pro_value'),
-            'last_week' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->whereBetween('pro_date', [now()->subDays(7), now()])->sum('pro_value'),
-            'last_month' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->whereBetween('pro_date', [now()->subDays(30), now()])->sum('pro_value'),
-            'total' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->sum('pro_value'),
+            'last_invoice' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->orderBy('id', 'desc')->value('fat_net'),
+            'last_week' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->whereBetween('pro_date', [now()->subDays(7), now()])->sum('fat_net'),
+            'last_month' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->whereBetween('pro_date', [now()->subDays(30), now()])->sum('fat_net'),
+            'total' => DB::table('ot_head')->whereIn('pro_tybe', [3, 9])->where('isdeleted', 0)->sum('fat_net'),
         ];
         
         // Get recent reservations
-        $recentReservations = DB::table('reservations')
-            ->orderBy('id', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function($res) {
-                $client = DB::table('clients')->where('id', $res->client)->first();
-                $res->client_name = $client ? $client->name : '__';
-                return $res;
-            });
+        $recentReservations = [];
         
         // Get due installments
-        $dueInstallments = DB::table('myinstallments')
-            ->where('ins_date', '<', now())
-            ->orderBy('ins_date')
-            ->limit(5)
-            ->get()
-            ->map(function($ins) {
-                $rent = DB::table('acc_head')->where('id', $ins->rent_id)->first();
-                $client = DB::table('acc_head')->where('id', $ins->cl_id)->first();
-                $ins->rent_name = $rent ? $rent->aname : '-';
-                $ins->client_name = $client ? $client->aname : '-';
-                return $ins;
-            });
+        $dueInstallments = [];
         
         // Sync Laravel session with native $_SESSION for compatibility
         if (!isset($_SESSION)) {

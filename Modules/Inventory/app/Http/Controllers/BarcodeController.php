@@ -17,6 +17,29 @@ class BarcodeController extends Controller
         return view('inventory::barcode.index', compact('settings', 'lang'));
     }
 
+    public function price(Request $request)
+    {
+        $barcode = $request->get('barcode');
+
+        if (!$barcode) {
+            return response()->json(['iname' => null, 'price1' => null]);
+        }
+
+        $item = DB::table('myitems')
+            ->select('iname', 'price1')
+            ->where('barcode', $barcode)
+            ->first();
+
+        if (!$item) {
+            return response()->json(['iname' => null, 'price1' => null]);
+        }
+
+        return response()->json([
+            'iname' => $item->iname,
+            'price1' => $item->price1
+        ]);
+    }
+
     public function pricePublic(Request $request)
     {
         $barcode = $request->get('barcode');

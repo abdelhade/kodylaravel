@@ -10,6 +10,8 @@ Route::middleware('check.auth')->group(function () {
     // Register explicit routes first so they don't get captured by the resource {pos} parameter
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::get('/pos/barcode-basic', [POSController::class, 'barcodeBasic'])->name('pos.barcode-basic');
+    Route::post('/pos/search-item', [POSController::class, 'searchItem'])->name('pos.search-item');
+    Route::post('/pos/save-order', [POSController::class, 'saveOrder'])->name('pos.save-order');
     
     // Resource routes
     Route::resource('pos', POSController::class)->names('pos');

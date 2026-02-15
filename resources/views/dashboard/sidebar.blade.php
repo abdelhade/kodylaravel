@@ -468,13 +468,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'barcode_search']) }}" class="nav-link -50">
+                            <a href="{{ route('barcode_search') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-barcode"></i>
                                 <p>عرض سعر الصنف</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'items_start_balance']) }}" class="nav-link -50">
+                            <a href="{{ route('items-start-balance.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-balance-scale"></i>
                                 <p>ضبط الارصدة الافتتاحية</p>
                             </a>

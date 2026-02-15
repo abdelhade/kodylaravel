@@ -65,7 +65,7 @@
                                         <td>{{ $employee->salary }}</td>
                                         <td>{{ $employee->info }}</td>
                                         <td>
-                                            <a class="btn btn-warning" href="{{ route('employees.edit', ['id' => $employee->id]) }}">
+                                            {{-- <a class="btn btn-warning" href="{{ route('employees.edit', ['id' => $employee->id]) }}"> --}}
                                                 <i class="fa fa-pen"></i>
                                             </a>
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delemp{{ $employee->id }}">
@@ -82,7 +82,7 @@
                                                         </div>
                                                         <div class="modal-body">
                                                             <p>هل تريد بالتأكيد الحذف {{ $employee->name }}؟</p>
-                                                            <form action="{{ route('employees.destroy') }}?id={{ $employee->id }}" method="post">
+                                                            {{-- <form action="{{ route('employees.destroy') }}?id={{ $employee->id }}" method="post"> --}}
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <input type="password" class="form-control" name="password" placeholder="كلمة المرور">

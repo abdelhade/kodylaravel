@@ -24,6 +24,12 @@
                         <div class="alert alert-danger">{{ session('error') }}</div>
                     @endif
 
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#addGroupModal">
+                            <i class="fa fa-plus"></i> إضافة مجموعة جديدة
+                        </button>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-striped table-sm table-hover align-middle">
                             <thead>
@@ -100,6 +106,7 @@
         </div>
     </div>
 </section>
+
     <!-- Add Group Modal -->
     <div class="modal fade" id="addGroupModal">
         <div class="modal-dialog">
@@ -114,9 +121,9 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
-                            <label for="gname">اسم المجموعة</label>
-                            <input type="text" class="form-control" id="gname" 
-                                   name="gname" placeholder="أدخل اسم المجموعة" value="{{ old('gname') }}" required>
+                            <label for="newGroupName">اسم المجموعة</label>
+                            <input type="text" class="form-control" id="newGroupName" 
+                                   name="gname" placeholder="أدخل مجموعة جديدة" value="{{ old('gname') }}" required>
                             @error('gname')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
@@ -124,7 +131,7 @@
                     </div>
                     <div class="modal-footer justify-content-between">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-primary">حفظ</button>
+                        <button type="submit" class="btn btn-info">حفظ</button>
                     </div>
                 </form>
             </div>

@@ -12,7 +12,7 @@ class EmployeesController extends Controller
      */
     public function index()
     {
-        return view('employees::index');
+        return app(EmployeeController::class)->index();
     }
 
     /**
@@ -20,20 +20,24 @@ class EmployeesController extends Controller
      */
     public function create()
     {
-        return view('employees::create');
+        return app(EmployeeController::class)->create();
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+        return app(EmployeeController::class)->store($request);
+    }
 
     /**
      * Show the specified resource.
      */
     public function show($id)
     {
-        return view('employees::show');
+        // Redirect to profile if singular controller handles it differently
+        return redirect()->route('employees.profile', ['id' => $id]);
     }
 
     /**
@@ -41,16 +45,26 @@ class EmployeesController extends Controller
      */
     public function edit($id)
     {
-        return view('employees::edit');
+        // The singular controller's edit method expects ID in the request
+        request()->merge(['id' => $id]);
+        return app(EmployeeController::class)->edit(request());
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {}
+    public function update(Request $request, $id)
+    {
+        $request->merge(['id' => $id]);
+        return app(EmployeeController::class)->update($request);
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id) {}
+    public function destroy($id)
+    {
+        request()->merge(['id' => $id]);
+        return app(EmployeeController::class)->destroy(request());
+    }
 }

@@ -6,15 +6,46 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PurchasesController extends Controller
 {
-    // أنواع الفواتير
+    // تعريف ثوابت أنواع الفواتير
     const INVOICE_TYPES = [
-        'PURCHASE' => 4,
-        'PURCHASE_RETURN' => 10,
-        'PURCHASE_ORDER' => 12
+        'PURCHASE' => 4,           // مشتريات
+        'SALES' => 3,              // مبيعات  
+        'POS' => 9,                // كاشير
+        'PURCHASE_RETURN' => 10,   // مردود مشتريات
+        'SALES_RETURN' => 11       // مردود مبيعات
     ];
+
+    // تعريف أنواع العمليات المحاسبية
+    const ACCOUNTING_TYPES = [
+        'RECEIPT' => 1,            // سند قبض
+        'PAYMENT' => 2,            // سند دفع
+        'SALES_DISC' => 7,         // خصم مبيعات
+        'PURCHASE_DISC' => 6       // خصم مشتريات
+    ];
+
+    /**
+     * عرض قائمة الفواتير
+     */
+    public function index()
+    {
+        $invoices = DB::table('ot_head')
+            ->where('isdeleted', 0)
+            ->whereIn('pro_tybe', [
+                self::INVOICE_TYPES['PURCHASE'],
+                self::INVOICE_TYPES['PURCHASE_RETURN']
+            ])
+            ->orderBy('id', 'desc')
+            ->paginate(20);
+
+        $settings = (array) DB::table('settings')->first();
+        $lang = $this->getLanguageArray();
+
+        return view('purchases::invoices.index', compact('invoices', 'settings', 'lang'));
+    }
 
     /**
      * عرض صفحة فاتورة المشتريات
@@ -25,7 +56,6 @@ class PurchasesController extends Controller
         $invoice_title = 'فاتورة مشتريات';
         $is_edit_mode = false;
         
-        // Get settings and language
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
@@ -33,7 +63,7 @@ class PurchasesController extends Controller
     }
 
     /**
-     * عرض صفحة فاتورة مردود مشتريات
+     * عرض صفحة مردود المشتريات
      */
     public function purchaseReturn()
     {
@@ -41,7 +71,6 @@ class PurchasesController extends Controller
         $invoice_title = 'فاتورة مردود مشتريات';
         $is_edit_mode = false;
         
-        // Get settings and language
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
@@ -49,47 +78,43 @@ class PurchasesController extends Controller
     }
 
     /**
-     * عرض صفحة أمر شراء
+     * عرض صفحة أمر الشراء
      */
     public function purchaseOrder()
     {
-        $pro_tybe = self::INVOICE_TYPES['PURCHASE_ORDER'];
+        $pro_tybe = 8; // نوع أمر الشراء
         $invoice_title = 'أمر شراء';
         $is_edit_mode = false;
         
-        // Get settings and language
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
         return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
     }
-    
+
     /**
-     * Get language array
+     * دالة للحصول على اللغة من الكاش
      */
     private function getLanguageArray()
     {
         return cache()->remember('language_ar', 3600, function () {
-            // محاولة الحصول من الـ cache أولاً
             $cached = cache()->get('laravel-cache-language_ar');
             if ($cached) {
                 return $cached;
             }
-            
-            // إذا لم يكن موجوداً، إرجاع array فارغ
             return [];
         });
     }
 
     /**
-     * عرض صفحة تعديل فاتورة
+     * عرض صفحة تعديل الفاتورة
      */
     public function edit($id)
     {
         $invoice = DB::table('ot_head')->where('id', $id)->first();
         
         if (!$invoice) {
-            return redirect()->route('purchases.invoice')->with('error', 'الفاتورة غير موجودة');
+            return redirect()->route('purchases.index')->with('error', 'الفاتورة غير موجودة');
         }
 
         $pro_tybe = $invoice->pro_tybe;
@@ -97,164 +122,177 @@ class PurchasesController extends Controller
         $is_edit_mode = true;
         $invoice_data = $invoice;
         
-        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'invoice_data'));
+        $settings = (array) DB::table('settings')->first();
+        $lang = $this->getLanguageArray();
+        
+        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'invoice_data', 'settings', 'lang'));
     }
 
     /**
-     * حفظ فاتورة جديدة
+     * إضافة فاتورة مشتريات جديدة
      */
     public function store(Request $request)
     {
         try {
+            Log::info('Purchase Invoice Store Request', [
+                'pro_tybe' => $request->input('pro_tybe'),
+                'items_count' => count($request->input('itmname', []))
+            ]);
+
             DB::beginTransaction();
 
             $pro_tybe = $request->input('pro_tybe');
-            $store_id = $request->input('store_id');
-            $acc2_id = $request->input('acc2_id'); // المورد
-            $emp_id = $request->input('emp_id');
             $pro_date = $request->input('pro_date', date('Y-m-d'));
             $headtotal = $request->input('headtotal', 0);
             $headdisc = $request->input('headdisc', 0);
-            $headplus = $request->input('headplus', 0);
             $headnet = $request->input('headnet', 0);
             $info = $request->input('info', '');
 
-            // الحصول على رقم الفاتورة التالي
-            $pro_id = $this->getNextInvoiceNumber($pro_tybe);
+            // Validation
+            if (empty($pro_tybe)) {
+                throw new \Exception('نوع الفاتورة مطلوب');
+            }
 
-            // إدخال رأس الفاتورة
+            // إنشاء رأس الفاتورة
             $last_op = DB::table('ot_head')->insertGetId([
-                'pro_id' => $pro_id,
                 'pro_tybe' => $pro_tybe,
-                'is_stock' => 1,
-                'is_journal' => 1,
-                'journal_tybe' => $pro_tybe,
-                'info' => $info,
                 'pro_date' => $pro_date,
-                'store_id' => $store_id,
-                'emp_id' => $emp_id,
-                'acc1' => $store_id,
-                'acc2' => $acc2_id,
                 'fat_total' => $headtotal,
                 'fat_disc' => $headdisc,
-                'fat_plus' => $headplus,
                 'fat_net' => $headnet,
-                'user' => Auth::id(),
-                'created_at' => now(),
-                'updated_at' => now()
+                'info' => $info,
+                'user' => Auth::id() ?? 1,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0
             ]);
 
-            // إدخال تفاصيل الفاتورة
+            Log::info('Invoice created', ['id' => $last_op]);
+
+            // معالجة تفاصيل الفاتورة
             $items = $request->input('itmname', []);
+            $itemsInserted = 0;
+            
             foreach ($items as $index => $item_id) {
                 if (empty($item_id)) continue;
 
-                $qty = $request->input('itmqty')[$index];
-                $price = $request->input('itmprice')[$index];
+                $qty = $request->input('itmqty')[$index] ?? 0;
+                $price = $request->input('itmprice')[$index] ?? 0;
                 $disc = $request->input('itmdisc')[$index] ?? 0;
-                $u_val = $request->input('u_val')[$index] ?? 1;
 
+                if ($qty <= 0 || $price < 0) continue;
+
+                // إدراج تفاصيل الفاتورة
                 DB::table('fat_details')->insert([
-                    'pro_tybe' => $pro_tybe,
-                    'pro_id' => $last_op,
+                    'fat_id' => $last_op,
                     'item_id' => $item_id,
-                    'u_val' => $u_val,
-                    'qty_in' => $qty * $u_val,
-                    'price' => $price / $u_val,
-                    'discount' => $disc,
-                    'det_value' => $qty * ($price - $disc),
-                    'fatid' => $last_op,
-                    'fat_tybe' => $pro_tybe,
-                    'det_store' => $store_id,
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'quantity' => $qty,
+                    'price' => $price,
+                    'total' => $qty * ($price - $disc),
+                    'crtime' => now()
                 ]);
+                
+                // تحديث كمية الصنف في جدول myitems (زيادة للمشتريات)
+                if ($pro_tybe == 4) { // فاتورة مشتريات
+                    DB::table('myitems')
+                        ->where('id', $item_id)
+                        ->increment('itmqty', $qty);
+                }
+                
+                $itemsInserted++;
+            }
+            
+            Log::info('Invoice details inserted', ['count' => $itemsInserted]);
+
+            if ($itemsInserted == 0) {
+                throw new \Exception('يجب إضافة صنف واحد على الأقل');
             }
 
             DB::commit();
 
-            return redirect()->route('purchases.invoice')->with('success', 'تم حفظ الفاتورة بنجاح');
+            return redirect()->route('purchases.index')->with('success', 'تم حفظ الفاتورة بنجاح - رقم: ' . $last_op);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+            Log::error('Purchase Invoice Store Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withInput()->with('error', 'حدث خطأ: ' . $e->getMessage());
         }
     }
 
     /**
-     * الحصول على رقم الفاتورة التالي
-     */
-    private function getNextInvoiceNumber($invoice_type)
-    {
-        $max_id = DB::table('ot_head')
-            ->where('pro_tybe', $invoice_type)
-            ->max(DB::raw('CAST(pro_id AS UNSIGNED)'));
-        
-        return $max_id ? ($max_id + 1) : 1;
-    }
-
-    /**
-     * تحديث فاتورة موجودة
+     * تحديث فاتورة المشتريات
      */
     public function update(Request $request, $id)
     {
         try {
+            Log::info('Purchase Invoice Update Request', [
+                'id' => $id,
+                'pro_tybe' => $request->input('pro_tybe'),
+                'items_count' => count($request->input('itmname', []))
+            ]);
+
             DB::beginTransaction();
 
             $pro_tybe = $request->input('pro_tybe');
-            $store_id = $request->input('store_id');
-            $acc2_id = $request->input('acc2_id');
-            $emp_id = $request->input('emp_id');
             $pro_date = $request->input('pro_date', date('Y-m-d'));
             $headtotal = $request->input('headtotal', 0);
             $headdisc = $request->input('headdisc', 0);
-            $headplus = $request->input('headplus', 0);
             $headnet = $request->input('headnet', 0);
             $info = $request->input('info', '');
+
+            // Validation
+            if (empty($pro_tybe)) {
+                throw new \Exception('نوع الفاتورة مطلوب');
+            }
 
             // تحديث رأس الفاتورة
             DB::table('ot_head')->where('id', $id)->update([
                 'info' => $info,
                 'pro_date' => $pro_date,
-                'store_id' => $store_id,
-                'emp_id' => $emp_id,
-                'acc1' => $store_id,
-                'acc2' => $acc2_id,
                 'fat_total' => $headtotal,
                 'fat_disc' => $headdisc,
-                'fat_plus' => $headplus,
                 'fat_net' => $headnet,
-                'updated_at' => now()
+                'mdtime' => now()
             ]);
 
-            // حذف التفاصيل القديمة
-            DB::table('fat_details')->where('pro_id', $id)->update(['isdeleted' => 1]);
+            Log::info('Invoice header updated', ['id' => $id]);
 
-            // إدخال تفاصيل جديدة
+            // حذف التفاصيل القديمة
+            DB::table('fat_details')->where('fat_id', $id)->delete();
+
+            // إضافة التفاصيل الجديدة
             $items = $request->input('itmname', []);
+            $itemsInserted = 0;
+            
             foreach ($items as $index => $item_id) {
                 if (empty($item_id)) continue;
 
-                $qty = $request->input('itmqty')[$index];
-                $price = $request->input('itmprice')[$index];
+                $qty = $request->input('itmqty')[$index] ?? 0;
+                $price = $request->input('itmprice')[$index] ?? 0;
                 $disc = $request->input('itmdisc')[$index] ?? 0;
-                $u_val = $request->input('u_val')[$index] ?? 1;
 
+                if ($qty <= 0 || $price < 0) continue;
+
+                // إدراج تفاصيل الفاتورة
                 DB::table('fat_details')->insert([
-                    'pro_tybe' => $pro_tybe,
-                    'pro_id' => $id,
+                    'fat_id' => $id,
                     'item_id' => $item_id,
-                    'u_val' => $u_val,
-                    'qty_in' => $qty * $u_val,
-                    'price' => $price / $u_val,
-                    'discount' => $disc,
-                    'det_value' => $qty * ($price - $disc),
-                    'fatid' => $id,
-                    'fat_tybe' => $pro_tybe,
-                    'det_store' => $store_id,
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'quantity' => $qty,
+                    'price' => $price,
+                    'total' => $qty * ($price - $disc),
+                    'crtime' => now()
                 ]);
+                
+                $itemsInserted++;
+            }
+            
+            Log::info('Invoice details updated', ['count' => $itemsInserted]);
+
+            if ($itemsInserted == 0) {
+                throw new \Exception('يجب إضافة صنف واحد على الأقل');
             }
 
             DB::commit();
@@ -263,24 +301,36 @@ class PurchasesController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+            Log::error('Purchase Invoice Update Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withInput()->with('error', 'حدث خطأ: ' . $e->getMessage());
         }
     }
 
     /**
-     * عرض قائمة الفواتير
+     * حذف فاتورة
      */
-    public function index()
+    public function destroy($id)
     {
-        $invoices = DB::table('ot_head')
-            ->where('pro_tybe', self::INVOICE_TYPES['PURCHASE'])
-            ->where('isdeleted', 0)
-            ->orderBy('id', 'desc')
-            ->paginate(20);
+        try {
+            DB::table('ot_head')->where('id', $id)->update(['isdeleted' => 1]);
+            DB::table('fat_details')->where('fat_id', $id)->delete();
 
-        $settings = (array) DB::table('settings')->first();
-        $lang = $this->getLanguageArray();
+            return redirect()->route('purchases.index')->with('success', 'تم حذف الفاتورة بنجاح');
+        } catch (\Exception $e) {
+            Log::error('خطأ في حذف الفاتورة: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'حدث خطأ أثناء حذف الفاتورة']);
+        }
+    }
 
-        return view('purchases::invoices.index', compact('invoices', 'settings', 'lang'));
+    /**
+     * الحصول على مخزون المخزن
+     */
+    public function getStoreInventory($storeId)
+    {
+        // Return empty array - stock_details table doesn't exist
+        return response()->json(['items' => []]);
     }
 }

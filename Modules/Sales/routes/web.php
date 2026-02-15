@@ -14,13 +14,16 @@ Route::middleware(['web', 'check.auth'])->prefix('sales')->name('sales.')->group
     Route::get('/', [SalesController::class, 'index'])->name('index');
     
     // فاتورة مبيعات
-    Route::get('/invoice', [SalesController::class, 'salesInvoice'])->name('invoice');
+    Route::get('/invoice', [SalesController::class, 'saleInvoice'])->name('invoice');
     
     // أمر بيع
-    Route::get('/order', [SalesController::class, 'salesOrder'])->name('order');
+    Route::get('/order', [SalesController::class, 'saleOrder'])->name('order');
+    
+    // مردود مبيعات
+    Route::get('/return', [SalesController::class, 'saleReturn'])->name('return');
     
     // عرض سعر
-    Route::get('/quotation', [SalesController::class, 'quotation'])->name('quotation');
+    Route::get('/quotation', [SalesController::class, 'saleOrder'])->name('quotation');
     
     // حفظ فاتورة
     Route::post('/store', [SalesController::class, 'store'])->name('store');

@@ -75,10 +75,7 @@
                                 <label>التاريخ</label>
                                 <input type="date" name="invoice_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
-                            <div class="col-md-3">
-                                <label>رقم الفاتورة</label>
-                                <input type="text" name="invoice_number" class="form-control" placeholder="رقم الفاتورة">
-                            </div>
+
                             <div class="col-md-3">
                                 <label>المخزن</label>
                                 <select name="store_id" class="form-control" required>

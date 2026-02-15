@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Purchases\Http\Controllers\PurchasesController;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,4 +32,9 @@ Route::middleware(['web', 'check.auth'])->prefix('purchases')->name('purchases.'
     
     // حذف فاتورة
     Route::delete('/delete/{id}', [PurchasesController::class, 'destroy'])->name('destroy');
+});
+
+// API routes
+Route::middleware(['web', 'check.auth'])->prefix('api')->group(function () {
+    Route::get('/store-inventory/{storeId}', [PurchasesController::class, 'getStoreInventory']);
 });
