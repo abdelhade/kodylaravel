@@ -37,6 +37,7 @@
                         </div>
                     </div>
 
+                    
                     <!-- جدول الأصناف -->
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="itemsTable" style="background: white;">
