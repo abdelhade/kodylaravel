@@ -27,7 +27,21 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "Modules\\POS\\": "Modules/POS/app/",
+            "Modules\\POS\\Database\\Seeders\\": "Modules/POS/database/seeders/",
+            "Modules\\Accounting\\": "Modules/Accounting/app/",
+            "Modules\\Attendance\\": "Modules/Attendance/app/",
+            "Modules\\Barcode\\": "Modules/Barcode/app/",
+            "Modules\\Clients\\": "Modules/Clients/app/",
+            "Modules\\Contracts\\": "Modules/Contracts/app/",
+            "Modules\\Employees\\": "Modules/Employees/app/",
+            "Modules\\Inventory\\": "Modules/Inventory/app/",
+            "Modules\\Production\\": "Modules/Production/app/",
+            "Modules\\Purchases\\": "Modules/Purchases/app/",
+            "Modules\\Reports\\": "Modules/Reports/app/",
+            "Modules\\Sales\\": "Modules/Sales/app/",
+            "Modules\\Settings\\": "Modules/Settings/app/"
         }
     },
     "autoload-dev": {

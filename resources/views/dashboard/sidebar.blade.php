@@ -571,7 +571,7 @@
                     <ul class="nav nav-treeview" id="pos-menu"
                         style="display: none; background-color: rgba(255,255,255,0.05);">
                         <li class="nav-item">
-                            <a href="{{ route('pos.index') }}" class="nav-link -50">
+                            <a href="{{ route('pos.barcode') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-barcode"></i>
                                 <p>نقطة بيع باركود</p>
                             </a>

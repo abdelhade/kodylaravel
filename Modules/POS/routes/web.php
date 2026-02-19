@@ -12,14 +12,18 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/pos/barcode-basic', [POSController::class, 'barcodeBasic'])->name('pos.barcode-basic');
     Route::post('/pos/search-item', [POSController::class, 'searchItem'])->name('pos.search-item');
     Route::post('/pos/save-order', [POSController::class, 'saveOrder'])->name('pos.save-order');
+    Route::get('/pos/recent-orders', [POSController::class, 'getRecentOrders'])->name('pos.recent-orders');
+    Route::delete('/pos/delete/{id}', [POSController::class, 'deleteOrder'])->name('pos.delete');
+    Route::get('/pos/print/{id}', [POSController::class, 'printOrder'])->name('pos.print');
+
     
     // Resource routes
     Route::resource('pos', POSController::class)->names('pos');
     // Complex POS pages still use LegacyController
-    Route::get('/pos_barcode', [LegacyController::class, 'handle'])->name('pos.barcode');
+    Route::get('/pos_barcode', [POSController::class, 'barcode'])->name('pos.barcode');
     Route::get('/pos/tables', [POSController::class, 'tables'])->name('pos.tables.view');
     Route::get('/pos/time', [POSController::class, 'timeBased'])->name('pos.time');
-    Route::get('/crud_tables', [LegacyController::class, 'handle'])->name('pos.tables');
+    Route::get('/crud_tables', [POSController::class, 'tables'])->name('pos.tables');
     
     // Closed Sessions routes (Converted to Blade)
     Route::get('/closed_sessions', [ClosedSessionController::class, 'index'])->name('pos.sessions');
