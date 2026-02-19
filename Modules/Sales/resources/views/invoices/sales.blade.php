@@ -32,7 +32,7 @@
                         <div class="col-md-8">
                             <label style="font-weight: 600;color: #00897b;">ملاحظات</label>
                             <input type="text" name="info" class="form-control"
-                                value="{{ $is_edit_mode && isset($invoice_data->info) ? $invoice_data->info : '' }}" 
+LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($invoice_data->info) ? $invoice_data->info : '' }}" 
                                 placeholder="ملاحظات الفاتورة">
                         </div>
                     </div>

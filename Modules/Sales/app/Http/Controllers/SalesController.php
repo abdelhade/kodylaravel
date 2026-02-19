@@ -36,8 +36,9 @@ class SalesController extends Controller
     {
         $invoices = Invoice::notDeleted()
             ->whereIn('pro_tybe', [
-                self::INVOICE_TYPES['SALES'],
-                self::INVOICE_TYPES['SALES_RETURN']
+                self::INVOICE_TYPES['SALES'],      // 3
+                self::INVOICE_TYPES['POS'],        // 9 - إضافة فواتير POS
+                self::INVOICE_TYPES['SALES_RETURN'] // 11
             ])
             ->orderBy('id', 'desc')
             ->paginate(20);
