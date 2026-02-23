@@ -5,29 +5,24 @@ namespace Modules\POS\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\POS\Models\POSTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TableController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('check.auth');
-    }
-
     /**
      * عرض قائمة الطاولات
      */
     public function index()
     {
-        $tables = POSTable::active()->orderBy('id')->get();
-        return view('pos::tables.index', compact('tables'));
-    }
+        $tables = DB::table('tables')
+            ->where('isdeleted', 0)
+            ->orderBy('id', 'desc')
+            ->get();
 
-    /**
-     * عرض نموذج إضافة طاولة
-     */
-    public function create()
-    {
-        return view('pos::tables.create');
+        $settings = (array) DB::table('settings')->first();
+        $lang = $this->getLanguageArray();
+
+        return view('pos::tables.index', compact('tables', 'settings', 'lang'));
     }
 
     /**
@@ -35,36 +30,42 @@ class TableController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'tname' => 'required|string|max:255',
             'table_case' => 'required|in:0,1,2',
         ]);
 
-        POSTable::create($validated);
+        DB::table('tables')->insert([
+            'tname' => $request->tname,
+            'table_case' => $request->table_case,
+            'crtime' => now(),
+            'mdtime' => now(),
+            'isdeleted' => 0,
+            'branch' => 'main',
+            'tatnet' => 0
+        ]);
 
         return redirect()->route('pos.tables.index')
             ->with('success', 'تم إضافة الطاولة بنجاح');
     }
 
     /**
-     * عرض نموذج تعديل طاولة
-     */
-    public function edit(POSTable $table)
-    {
-        return view('pos::tables.edit', compact('table'));
-    }
-
-    /**
      * تحديث طاولة
      */
-    public function update(Request $request, POSTable $table)
+    public function update(Request $request, $id)
     {
-        $validated = $request->validate([
+        $request->validate([
             'tname' => 'required|string|max:255',
             'table_case' => 'required|in:0,1,2',
         ]);
 
-        $table->update($validated);
+        DB::table('tables')
+            ->where('id', $id)
+            ->update([
+                'tname' => $request->tname,
+                'table_case' => $request->table_case,
+                'mdtime' => now()
+            ]);
 
         return redirect()->route('pos.tables.index')
             ->with('success', 'تم تحديث الطاولة بنجاح');
@@ -73,29 +74,27 @@ class TableController extends Controller
     /**
      * حذف طاولة
      */
-    public function destroy(POSTable $table)
+    public function destroy($id)
     {
-        $table->update(['isdeleted' => 1]);
+        DB::table('tables')
+            ->where('id', $id)
+            ->update(['isdeleted' => 1]);
 
         return redirect()->route('pos.tables.index')
             ->with('success', 'تم حذف الطاولة بنجاح');
     }
 
     /**
-     * تحديث حالة الطاولة (AJAX)
+     * دالة للحصول على اللغة من الكاش
      */
-    public function updateStatus(Request $request, POSTable $table)
+    private function getLanguageArray()
     {
-        $validated = $request->validate([
-            'table_case' => 'required|in:0,1,2',
-        ]);
-
-        $table->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تحديث حالة الطاولة',
-            'status' => $table->getStatusLabel()
-        ]);
+        return cache()->remember('language_ar', 3600, function () {
+            $cached = cache()->get('laravel-cache-language_ar');
+            if ($cached) {
+                return $cached;
+            }
+            return [];
+        });
     }
 }

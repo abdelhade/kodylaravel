@@ -577,13 +577,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'tables']) }}" class="nav-link -50">
+                            <a href="{{ route('pos.tables.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-utensils"></i>
                                 <p>إدارة الطاولات</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'closed_sessions']) }}" class="nav-link -50">
+                            <a href="{{ route('pos.sessions') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-history"></i>
                                 <p>الشيفتات المنتهية</p>
                             </a>

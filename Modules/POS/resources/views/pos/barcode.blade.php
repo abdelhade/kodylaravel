@@ -94,18 +94,20 @@
                             <!-- نوع الطلب -->
                             <div class="mb-2">
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" id="age1" name="age" value="1" checked>
+                                    <input type="radio" class="btn-check" id="age1" name="age" value="1" 
+                                        {{ (!$editOrder || ($editOrder->age ?? 1) == 1) ? 'checked' : '' }}>
                                     <label class="btn btn-outline-primary btn-sm" for="age1">
                                         <i class="fas fa-shopping-bag me-1"></i>تيك أواي
                                     </label>
 
                                     <input type="radio" class="btn-check" id="age2" name="age" value="2" 
-                                        {{ request('table') ? 'checked' : '' }}>
+                                        {{ (request('table') || ($editOrder && ($editOrder->age ?? 0) == 2)) ? 'checked' : '' }}>
                                     <label class="btn btn-outline-primary btn-sm" for="age2">
                                         <i class="fas fa-chair me-1"></i>طاولة
                                     </label>
 
-                                    <input type="radio" class="btn-check" id="age3" name="age" value="3">
+                                    <input type="radio" class="btn-check" id="age3" name="age" value="3"
+                                        {{ ($editOrder && ($editOrder->age ?? 0) == 3) ? 'checked' : '' }}>
                                     <label class="btn btn-outline-primary btn-sm" for="age3" onclick="openDeliveryModal()">
                                         <i class="fas fa-motorcycle me-1"></i>دليفري
                                     </label>
@@ -235,8 +237,7 @@
                                             @php
                                                 $details = DB::table('fat_details as fd')
                                                     ->leftJoin('myitems as m', 'm.id', '=', 'fd.item_id')
-                                                    ->where('fd.pro_id', $editOrder->id)
-                                                    ->where('fd.isdeleted', 0)
+                                                    ->where('fd.fat_id', $editOrder->id)
                                                     ->select('fd.*', 'm.iname as item_name', 'm.barcode')
                                                     ->get();
                                                 $x = 0;
@@ -245,9 +246,9 @@
                                                 @php
                                                     $x++;
                                                     $item_name = $detail->item_name ?: 'صنف غير معروف';
-                                                    $qty = floatval($detail->qty_out) - floatval($detail->qty_in);
+                                                    $qty = floatval($detail->quantity);
                                                     $price = floatval($detail->price);
-                                                    $subtotal = floatval($detail->det_value);
+                                                    $subtotal = floatval($detail->total);
                                                     $barcode = $detail->barcode ?: $detail->item_id;
                                                 @endphp
                                                 <div class="card mb-1 item-card-order shadow-sm border-start border-3"
@@ -856,33 +857,35 @@
                     if (data.success && data.orders.length > 0) {
                         let html = '';
                         data.orders.forEach((order, index) => {
-                            // تفاصيل الأصناف
-                            let itemsHtml = '';
-                            if (order.items && order.items.length > 0) {
-                                itemsHtml = order.items.map(item => 
-                                    `${item.item_name} (${item.quantity})`
-                                ).join(', ');
-                            }
+                            // تحديد نوع الطلب
+                            let orderType = '<span class="badge bg-info">تيك أواي</span>';
+                            
+                            // تنسيق التاريخ والوقت
+                            let orderDate = new Date(order.crtime);
+                            let dateStr = orderDate.toLocaleDateString('ar-EG');
+                            let timeStr = orderDate.toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'});
                             
                             html += `
-                                <tr>
+                                <tr class="text-center">
                                     <td>${index + 1}</td>
-                                    <td>${order.id}</td>
-                                    <td>${order.pro_date}</td>
-                                    <td>${new Date(order.crtime).toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'})}</td>
-                                    <td>${order.items_count || 0}</td>
-                                    <td>${parseFloat(order.fat_total).toFixed(2)}</td>
-                                    <td>${parseFloat(order.fat_net).toFixed(2)}</td>
+                                    <td><strong>${order.id}</strong></td>
+                                    <td>${timeStr}<br><small class="text-muted">${dateStr}</small></td>
+                                    <td>الحبش الفرنساوي</td>
+                                    <td>${orderType}</td>
+                                    <td><strong class="text-primary">${parseFloat(order.fat_net).toFixed(2)} ج.م</strong></td>
+                                    <td><span class="badge bg-success">مكتمل</span></td>
                                     <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editOrder(${order.id})" title="تعديل">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.id})" title="حذف">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-info" onclick="printOrder(${order.id})" title="طباعة">
-                                            <i class="fas fa-print"></i>
-                                        </button>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-danger" onclick="deleteOrder(${order.id})" title="حذف">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button class="btn btn-info" onclick="printOrder(${order.id})" title="طباعة">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <button class="btn btn-warning" onclick="editOrder(${order.id})" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             `;
@@ -931,6 +934,11 @@
                             
                             // حساب الإجمالي
                             recalculateTotal();
+                            
+                            // تحديد نوع الطلب
+                            if (order.age) {
+                                $('input[name="age"][value="' + order.age + '"]').prop('checked', true);
+                            }
                             
                             // إضافة معرف الطلب للتعديل
                             $('input[name="edit"]').val(orderId);
@@ -1005,23 +1013,23 @@
         style="width: 80%; max-width: 1200px;">
         <div class="offcanvas-header bg-primary text-white">
             <h5 class="offcanvas-title">
-                <i class="fas fa-history me-2"></i>الطلبات الأخيرة
+                <i class="fas fa-history me-2"></i>الطلبات الأخيرة (10 طلبات)
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-striped table-bordered mb-0">
+                <table class="table table-hover table-striped table-bordered mb-0" style="font-size: 0.9rem;">
                     <thead class="table-dark sticky-top">
-                        <tr>
-                            <th>#</th>
-                            <th>رقم الفاتورة</th>
-                            <th>التاريخ</th>
-                            <th>العميل</th>
-                            <th>النوع</th>
-                            <th>الإجمالي</th>
-                            <th>الحالة</th>
-                            <th>العمليات</th>
+                        <tr class="text-center">
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 12%;">رقم الفاتورة</th>
+                            <th style="width: 15%;">التاريخ</th>
+                            <th style="width: 18%;">العميل</th>
+                            <th style="width: 12%;">النوع</th>
+                            <th style="width: 13%;">الإجمالي</th>
+                            <th style="width: 10%;">الحالة</th>
+                            <th style="width: 15%;">العمليات</th>
                         </tr>
                     </thead>
                     <tbody id="recentOrdersList">
