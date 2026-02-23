@@ -9,11 +9,6 @@ use Illuminate\Http\Request;
 
 class ClosedSessionController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('check.auth');
-    }
-
     /**
      * عرض قائمة الجلسات المغلقة
      */

@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\POS\Http\Controllers\POSController;
+use Modules\POS\Http\Controllers\TableController;
 use Modules\POS\Http\Controllers\ClosedSessionController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // POS routes (Partially converted - complex pages use LegacyController)
@@ -15,20 +15,28 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/pos/recent-orders', [POSController::class, 'getRecentOrders'])->name('pos.recent-orders');
     Route::delete('/pos/delete/{id}', [POSController::class, 'deleteOrder'])->name('pos.delete');
     Route::get('/pos/print/{id}', [POSController::class, 'printOrder'])->name('pos.print');
-
     
-    // Resource routes
-    Route::resource('pos', POSController::class)->names('pos');
-    // Complex POS pages still use LegacyController
-    Route::get('/pos_barcode', [POSController::class, 'barcode'])->name('pos.barcode');
-    Route::get('/pos/tables', [POSController::class, 'tables'])->name('pos.tables.view');
-    Route::get('/pos/time', [POSController::class, 'timeBased'])->name('pos.time');
-    Route::get('/crud_tables', [POSController::class, 'tables'])->name('pos.tables');
-    
-    // Closed Sessions routes (Converted to Blade)
-    Route::get('/closed_sessions', [ClosedSessionController::class, 'index'])->name('pos.sessions');
+    // Closed Sessions routes - MUST be before resource routes
+    Route::get('/closed_sessions', [ClosedSessionController::class, 'index'])->name('pos.closed-sessions.index');
+    Route::get('/pos/closed-sessions/export', [ClosedSessionController::class, 'export'])->name('pos.closed-sessions.export');
+    Route::get('/pos/closed-sessions/{session}', [ClosedSessionController::class, 'show'])->name('pos.closed-sessions.show');
+    Route::get('/pos/closed-sessions', [ClosedSessionController::class, 'index'])->name('pos.sessions');
     Route::post('/close_shift', [ClosedSessionController::class, 'close'])->name('pos.close-shift');
-    Route::get('/close_shift', [ClosedSessionController::class, 'close'])->name('pos.close-shift.get'); // For GET requests from pos_barcode
+    Route::get('/close_shift', [ClosedSessionController::class, 'close'])->name('pos.close-shift.get');
     
+    // Tables Management Routes - MUST be before resource routes
+    Route::get('/crud_tables', [TableController::class, 'index'])->name('pos.tables');
+    Route::get('/pos/tables', [TableController::class, 'index'])->name('pos.tables.index');
+    Route::post('/pos/tables', [TableController::class, 'store'])->name('pos.tables.store');
+    Route::put('/pos/tables/{table}', [TableController::class, 'update'])->name('pos.tables.update');
+    Route::delete('/pos/tables/{table}', [TableController::class, 'destroy'])->name('pos.tables.destroy');
+    Route::post('/pos/tables/{table}/status', [TableController::class, 'updateStatus'])->name('pos.tables.status');
+    
+    // Complex POS pages
+    Route::get('/pos_barcode', [POSController::class, 'barcode'])->name('pos.barcode');
+    Route::get('/pos/time', [POSController::class, 'timeBased'])->name('pos.time');
     Route::get('/pos_po', [POSController::class, 'purchaseOrder'])->name('pos_po');
+    
+    // Resource routes - MUST be last to avoid conflicts
+    Route::resource('pos', POSController::class)->except(['index'])->names('pos');
 });

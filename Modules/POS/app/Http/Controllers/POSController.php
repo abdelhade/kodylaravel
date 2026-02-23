@@ -190,6 +190,7 @@ class POSController extends Controller
                     ->where('id', $editOrderId)
                     ->update([
                         'pro_date' => $proDate,
+                        'age' => $orderType,
                         'fat_total' => $total,
                         'fat_disc' => $discount,
                         'fat_net' => $net,
@@ -220,6 +221,7 @@ class POSController extends Controller
                 $orderId = DB::table('ot_head')->insertGetId([
                     'pro_date' => $proDate,
                     'pro_tybe' => 9,
+                    'age' => $orderType,
                     'user' => session('userid') ?? 1,
                     'fat_total' => $total,
                     'fat_disc' => $discount,
@@ -310,6 +312,7 @@ class POSController extends Controller
                 ->select(
                     'oh.id',
                     'oh.pro_date',
+                    'oh.age',
                     'oh.fat_total',
                     'oh.fat_disc',
                     'oh.fat_net',
