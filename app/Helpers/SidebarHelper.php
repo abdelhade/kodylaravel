@@ -155,11 +155,18 @@ class SidebarHelper
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($userId) {
             try {
                 $userData = DB::table('users')->where('id', $userId)->first();
-                if (!$userData || !$userData->role_id) {
+                if (!$userData) {
                     return [];
                 }
                 
-                $role = DB::table('myroles')->where('id', $userData->role_id)->first();
+                // العمود الصحيح هو userrole مش role_id
+                $roleId = $userData->userrole ?? null;
+                if (!$roleId) {
+                    return [];
+                }
+                
+                // جلب الصلاحيات من جدول usr_pwrs
+                $role = DB::table('usr_pwrs')->where('id', $roleId)->first();
                 return $role ? (array) $role : [];
             } catch (\Exception $e) {
                 Log::error('Error fetching user role', [

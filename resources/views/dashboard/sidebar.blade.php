@@ -591,6 +591,50 @@
                     </ul>
                 </li>
 
+                <!-- السندات -->
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'voucher-menu')">
+                        <i class="nav-icon fas fa-money-bill-wave"></i>
+                        <p>
+                            السندات
+                            <i class="fas fa-angle-left right ms-auto"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" id="voucher-menu"
+                        style="display: none; background-color: rgba(255,255,255,0.05);">
+                        <li class="nav-item">
+                            <a href="{{ route('voucher.create', ['t' => 'recive']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-hand-holding-usd"></i>
+                                <p>سند قبض</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('voucher.create', ['t' => 'payment']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-money-check-alt"></i>
+                                <p>سند دفع</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('voucher.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-list-alt"></i>
+                                <p>كل السندات</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('voucher.index', ['t' => 'recive']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-receipt"></i>
+                                <p>سندات القبض</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('voucher.index', ['t' => 'payment']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-file-invoice-dollar"></i>
+                                <p>سندات الدفع</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 
 
                 <!-- ادارة الموبايل -->
@@ -733,19 +777,19 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('vouchers.create', ['t' => 'recive']) }}" class="nav-link -50">
+                            <a href="{{ route('voucher.create', ['t' => 'recive']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-hand-holding-usd"></i>
                                 <p>سند القبض</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('vouchers.create', ['t' => 'payment']) }}" class="nav-link -50">
+                            <a href="{{ route('voucher.create', ['t' => 'payment']) }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-money-check"></i>
                                 <p>سند دفع</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('vouchers.index') }}" class="nav-link -50">
+                            <a href="{{ route('voucher.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-file-invoice"></i>
                                 <p>السندات</p>
                             </a>

@@ -54,7 +54,7 @@
     <link href="{{ asset('modules/kody2/dist/css/horstec.css') }}" rel="stylesheet">
     <link href="{{ asset('modules/kody2/styles/dashboard.css') }}" rel="stylesheet">
     <link href="{{ asset('modules/kody2/styles/sidebar-fixes.css') }}" rel="stylesheet">
-    <link href="{{ asset('native/css/operations_responsive.css') }}" rel="stylesheet">
+    <link href="{{ asset('modules/kody2/css/operations_responsive.css') }}" rel="stylesheet">
 
     <!-- إصلاح طوارئ السايد بار -->
     <style>
@@ -82,7 +82,7 @@
         }
 
         .content-wrapper {
-            background-color: {{ isset($settings['bodycolor']) ? $settings['bodycolor'] : '#f4f6f9' }};
+            background-color: {{ isset($settings->bodycolor) ? $settings->bodycolor : '#f4f6f9' }};
         }
 
         /* Font Awesome Font Faces */

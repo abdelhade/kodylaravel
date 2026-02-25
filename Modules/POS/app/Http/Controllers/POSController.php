@@ -14,17 +14,24 @@ class POSController extends Controller
      */
     public function index()
     {
+        // جلب الإعدادات
+        $settings = DB::table('settings')->where('id', 1)->first();
+        $lang = []; // متغير اللغة الافتراضي
+        
         // جلب طلبات POS
         $orders = DB::table('ot_head as oh')
+            ->leftJoin('acc_head as client', 'oh.acc1', '=', 'client.id')
             ->select(
                 'oh.id',
                 'oh.pro_date',
+                'oh.age',
                 'oh.fat_total',
                 'oh.fat_disc',
                 'oh.fat_net',
                 'oh.info',
                 'oh.crtime',
-                'oh.user'
+                'oh.user',
+                'client.aname as client_name'
             )
             ->where('oh.pro_tybe', 9)
             ->where('oh.isdeleted', 0)
@@ -43,7 +50,7 @@ class POSController extends Controller
             $order->items_count = $details->count();
         }
 
-        return view('pos::pos.index', compact('orders'));
+        return view('pos::pos.index', compact('orders', 'settings', 'lang'));
     }
 
     /**
@@ -191,6 +198,11 @@ class POSController extends Controller
                     ->update([
                         'pro_date' => $proDate,
                         'age' => $orderType,
+                        'acc1' => $clientId,
+                        'acc2' => $storeId,
+                        'store_id' => $storeId,
+                        'emp_id' => $empId,
+                        'acc_fund' => $fundId,
                         'fat_total' => $total,
                         'fat_disc' => $discount,
                         'fat_net' => $net,
@@ -222,6 +234,11 @@ class POSController extends Controller
                     'pro_date' => $proDate,
                     'pro_tybe' => 9,
                     'age' => $orderType,
+                    'acc1' => $clientId,
+                    'acc2' => $storeId,
+                    'store_id' => $storeId,
+                    'emp_id' => $empId,
+                    'acc_fund' => $fundId,
                     'user' => session('userid') ?? 1,
                     'fat_total' => $total,
                     'fat_disc' => $discount,
@@ -285,6 +302,14 @@ class POSController extends Controller
                 ? "تم تعديل الطلب بنجاح - رقم الفاتورة: {$orderId}"
                 : "تم حفظ الطلب بنجاح - رقم الفاتورة: {$orderId}";
 
+            // التحقق من طلب الطباعة
+            if ($request->has('print_after_save') && $request->print_after_save == '1') {
+                // إعادة التوجيه لصفحة الطباعة
+                return redirect()
+                    ->route('pos.print', $orderId)
+                    ->with('success', $message);
+            }
+
             return redirect()
                 ->route('pos.barcode')
                 ->with('success', $message);
@@ -309,6 +334,7 @@ class POSController extends Controller
     {
         try {
             $orders = DB::table('ot_head as oh')
+                ->leftJoin('acc_head as client', 'oh.acc1', '=', 'client.id')
                 ->select(
                     'oh.id',
                     'oh.pro_date',
@@ -317,12 +343,13 @@ class POSController extends Controller
                     'oh.fat_disc',
                     'oh.fat_net',
                     'oh.crtime',
-                    'oh.info'
+                    'oh.info',
+                    'client.aname as client_name'
                 )
                 ->where('oh.pro_tybe', 9)
                 ->where('oh.isdeleted', 0)
                 ->orderBy('oh.id', 'desc')
-                ->limit(20)
+                ->limit(10)
                 ->get();
 
             // جلب تفاصيل كل طلب
@@ -347,6 +374,53 @@ class POSController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ في جلب الطلبات'
+            ], 500);
+        }
+    }
+
+    /**
+     * جلب تفاصيل طلب معين
+     */
+    public function getOrderDetails($id)
+    {
+        try {
+            // جلب بيانات الطلب
+            $order = DB::table('ot_head')
+                ->leftJoin('acc_head as client', 'ot_head.acc1', '=', 'client.id')
+                ->select(
+                    'ot_head.*',
+                    'client.aname as client_name'
+                )
+                ->where('ot_head.id', $id)
+                ->where('ot_head.pro_tybe', 9)
+                ->where('ot_head.isdeleted', 0)
+                ->first();
+
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الطلب غير موجود'
+                ], 404);
+            }
+
+            // جلب تفاصيل الأصناف
+            $details = DB::table('fat_details as fd')
+                ->join('myitems as mi', 'fd.item_id', '=', 'mi.id')
+                ->select('fd.quantity', 'fd.price', 'fd.total', 'mi.iname as item_name')
+                ->where('fd.fat_id', $id)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'order' => $order,
+                'details' => $details
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching order details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ في جلب التفاصيل'
             ], 500);
         }
     }
@@ -445,7 +519,7 @@ class POSController extends Controller
     public function barcode(Request $request)
     {
         // جلب البيانات الأساسية
-        $posdate = date('Y-m-d', strtotime('-4 hours'));
+        $posdate = now()->format('Y-m-d');
         $settings = DB::table('settings')->where('id', 1)->first();
 
         // التحقق من وجود طاولات تجريبية

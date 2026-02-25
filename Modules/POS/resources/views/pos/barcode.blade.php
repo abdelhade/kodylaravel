@@ -858,19 +858,44 @@
                         let html = '';
                         data.orders.forEach((order, index) => {
                             // تحديد نوع الطلب
-                            let orderType = '<span class="badge bg-info">تيك أواي</span>';
+                            let orderType = '';
+                            if (order.age == 1) {
+                                orderType = '<span class="badge bg-primary">تيك اوي</span>';
+                            } else if (order.age == 2) {
+                                orderType = '<span class="badge bg-info">طاولة</span>';
+                            } else if (order.age == 3) {
+                                orderType = '<span class="badge bg-warning">دليفري</span>';
+                            } else {
+                                orderType = '<span class="badge bg-secondary">غير محدد</span>';
+                            }
                             
                             // تنسيق التاريخ والوقت
                             let orderDate = new Date(order.crtime);
-                            let dateStr = orderDate.toLocaleDateString('ar-EG');
-                            let timeStr = orderDate.toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'});
+                            
+                            // التحقق من صحة التاريخ
+                            if (isNaN(orderDate.getTime())) {
+                                // إذا كان التاريخ غير صحيح، استخدم التاريخ الحالي
+                                orderDate = new Date();
+                            }
+                            
+                            let dateStr = orderDate.toLocaleDateString('ar-EG', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit'
+                            });
+                            
+                            let timeStr = orderDate.toLocaleTimeString('ar-EG', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
                             
                             html += `
                                 <tr class="text-center">
                                     <td>${index + 1}</td>
                                     <td><strong>${order.id}</strong></td>
                                     <td>${timeStr}<br><small class="text-muted">${dateStr}</small></td>
-                                    <td>الحبش الفرنساوي</td>
+                                    <td>${order.client_name || 'عميل نقدي'}</td>
                                     <td>${orderType}</td>
                                     <td><strong class="text-primary">${parseFloat(order.fat_net).toFixed(2)} ج.م</strong></td>
                                     <td><span class="badge bg-success">مكتمل</span></td>
@@ -1048,70 +1073,132 @@
     
     <!-- Modal الدفع -->
     <div class="modal fade" id="paymentModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-money-bill-wave me-2"></i>إتمام الدفع
+        <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 900px;">
+            <div class="modal-content" style="border-radius: 15px; overflow: hidden;">
+                <!-- Header -->
+                <div class="modal-header text-white py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <h5 class="modal-title fw-bold mb-0">
+                        <i class="fas fa-cash-register me-2"></i>الدفع والإجماليات
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="row mb-3">
+                
+                <div class="modal-body p-3">
+                    <div class="row g-2">
+                        <!-- العمود الأيمن -->
                         <div class="col-md-6">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">الإجمالي</h6>
-                                    <h3 class="text-primary" id="payment_total">0.00 ج.م</h3>
+                            <!-- الإجمالي -->
+                            <div class="mb-2 p-2 rounded" style="background: #f8f9fa; border-right: 4px solid #667eea;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-calculator text-primary me-1"></i>
+                                        <span class="fw-bold" style="font-size: 0.9rem;">الإجمالي</span>
+                                    </div>
+                                    <h5 class="mb-0 text-primary" id="payment_total" style="font-size: 1.1rem;">10.00 ج.م</h5>
+                                </div>
+                            </div>
+
+                            <!-- الخصم -->
+                            <div class="mb-2 p-2 rounded" style="background: #e3f2fd; border-right: 4px solid #2196f3;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <i class="fas fa-percent text-info me-1"></i>
+                                        <span class="fw-bold" style="font-size: 0.9rem;">الخصم</span>
+                                    </div>
+                                </div>
+                                <div class="row g-1">
+                                    <div class="col-7">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white px-2">
+                                                <i class="fas fa-tag text-info"></i>
+                                            </span>
+                                            <input type="number" class="form-control form-control-sm" id="discount_value" 
+                                                placeholder="قيمة" step="0.01" value="0" style="font-size: 0.85rem;">
+                                            <span class="input-group-text bg-primary text-white px-2" style="font-size: 0.75rem;">ج.م</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-5">
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control form-control-sm" id="discount_percent" 
+                                                placeholder="0" step="0.01" value="0" style="font-size: 0.85rem;">
+                                            <span class="input-group-text bg-white px-2" style="font-size: 0.75rem;">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- الصافي -->
+                            <div class="mb-2 p-2 rounded" style="background: #e8f5e9; border-right: 4px solid #4caf50;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-check-circle text-success me-1"></i>
+                                        <span class="fw-bold" style="font-size: 0.9rem;">الصافي</span>
+                                    </div>
+                                    <h5 class="mb-0 text-success" id="payment_net" style="font-size: 1.1rem;">10.00 ج.م</h5>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- العمود الأيسر -->
                         <div class="col-md-6">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">الصافي</h6>
-                                    <h3 class="text-success" id="payment_net">0.00 ج.م</h3>
+                            <!-- المدفوع -->
+                            <div class="mb-2 p-2 rounded" style="background: #ffebee; border-right: 4px solid #f44336;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <i class="fas fa-wallet text-danger me-1"></i>
+                                        <span class="fw-bold" style="font-size: 0.9rem;">المدفوع</span>
+                                    </div>
+                                    <div class="badge bg-danger" style="font-size: 0.85rem; padding: 4px 10px;">0.00 ج.م</div>
+                                </div>
+                                <input type="number" class="form-control form-control-sm text-center fw-bold" 
+                                    id="paid_amount" step="0.01" placeholder="0.00" value="0"
+                                    style="border: 2px solid #f44336; font-size: 1rem;">
+                            </div>
+
+                            <!-- بيانات الآجل -->
+                            <div class="p-2 rounded" style="background: #fff3e0; border-right: 4px solid #ff9800;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <i class="fas fa-clock text-warning me-1"></i>
+                                        <span class="fw-bold" style="font-size: 0.9rem;">بيانات الآجل</span>
+                                    </div>
+                                </div>
+                                <div class="row g-1">
+                                    <div class="col-12 mb-1">
+                                        <input type="text" class="form-control form-control-sm" id="later_name" 
+                                            placeholder="اسم الشخص..." style="font-size: 0.85rem;">
+                                    </div>
+                                    <div class="col-12 mb-1">
+                                        <input type="text" class="form-control form-control-sm" id="later_notes" 
+                                            placeholder="ملاحظات..." style="font-size: 0.85rem;">
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white px-2" style="font-size: 0.75rem;">قيمة الآجل</span>
+                                            <input type="number" class="form-control form-control-sm text-danger fw-bold text-center" 
+                                                id="later_amount" step="0.01" placeholder="0.00" value="0.00" readonly
+                                                style="font-size: 0.9rem;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">طريقة الدفع</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="payment_method" id="cash" value="cash" checked>
-                            <label class="btn btn-outline-success" for="cash">
-                                <i class="fas fa-money-bill-wave me-1"></i>نقدي
-                            </label>
-                            
-                            <input type="radio" class="btn-check" name="payment_method" id="card" value="card">
-                            <label class="btn btn-outline-primary" for="card">
-                                <i class="fas fa-credit-card me-1"></i>بطاقة
-                            </label>
-                            
-                            <input type="radio" class="btn-check" name="payment_method" id="later" value="later">
-                            <label class="btn btn-outline-warning" for="later">
-                                <i class="fas fa-clock me-1"></i>آجل
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">المبلغ المدفوع</label>
-                        <input type="number" class="form-control form-control-lg text-center" 
-                            id="paid_amount" step="0.01" placeholder="0.00">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">الباقي</label>
-                        <input type="text" class="form-control form-control-lg text-center bg-light" 
-                            id="change_amount" readonly value="0.00 ج.م">
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-success btn-lg" onclick="completePayment()">
-                        <i class="fas fa-check me-1"></i>إتمام الدفع وطباعة
+
+                <!-- Footer -->
+                <div class="modal-footer border-0 p-2" style="background: #f8f9fa;">
+                    <button type="button" class="btn btn-sm px-3" data-bs-dismiss="modal"
+                        style="background: #6c757d; color: white; border-radius: 8px;">
+                        <i class="fas fa-times me-1"></i>إلغاء
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm px-3" onclick="saveOrderOnly()"
+                        style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border: none; border-radius: 8px;">
+                        <i class="fas fa-save me-1"></i>حفظ الطلب
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-3" onclick="saveAndPrint()"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px;">
+                        <i class="fas fa-print me-1"></i>حفظ وطباعة
                     </button>
                 </div>
             </div>
@@ -1239,10 +1326,10 @@
             $('#tablesModal').modal('hide');
         }
         
-        // إتمام الدفع
-        function completePayment() {
+        // حفظ الطلب فقط
+        function saveOrderOnly() {
             const items = document.querySelectorAll('#itemData .item-card-order');
-            console.log('Complete payment clicked, items:', items.length);
+            console.log('Save order clicked, items:', items.length);
             
             if (items.length === 0) {
                 alert('يرجى إضافة أصناف للطلب');
@@ -1255,6 +1342,42 @@
             // إرسال النموذج
             console.log('Submitting form...');
             document.getElementById('posForm').submit();
+        }
+        
+        // حفظ وطباعة
+        function saveAndPrint() {
+            const items = document.querySelectorAll('#itemData .item-card-order');
+            console.log('Save and print clicked, items:', items.length);
+            
+            if (items.length === 0) {
+                alert('يرجى إضافة أصناف للطلب');
+                return;
+            }
+            
+            // إضافة حقل مخفي للطباعة
+            let printInput = document.getElementById('print_after_save');
+            if (!printInput) {
+                printInput = document.createElement('input');
+                printInput.type = 'hidden';
+                printInput.name = 'print_after_save';
+                printInput.id = 'print_after_save';
+                printInput.value = '1';
+                document.getElementById('posForm').appendChild(printInput);
+            } else {
+                printInput.value = '1';
+            }
+            
+            // إغلاق المودال
+            $('#paymentModal').modal('hide');
+            
+            // إرسال النموذج
+            console.log('Submitting form with print flag...');
+            document.getElementById('posForm').submit();
+        }
+        
+        // دالة قديمة للتوافق
+        function completePayment() {
+            saveOrderOnly();
         }
         
         // تأكيد الدليفري
@@ -1279,25 +1402,77 @@
             }
         }
         
-        // تحديث المبلغ المدفوع والباقي
-        $('#paid_amount').on('input', function() {
-            const total = parseFloat($('#net_val').val()) || 0;
-            const paid = parseFloat($(this).val()) || 0;
-            const change = paid - total;
-            
-            $('#change_amount').val(change.toFixed(2) + ' ج.م');
-        });
-        
         // تحديث قيم الدفع عند فتح المودال
         $('#paymentModal').on('show.bs.modal', function() {
-            const total = $('#total').val();
-            const net = $('#net_val').val();
+            const total = parseFloat($('#total').val()) || 0;
+            const net = parseFloat($('#net_val').val()) || 0;
             
-            $('#payment_total').text(parseFloat(total).toFixed(2) + ' ج.م');
-            $('#payment_net').text(parseFloat(net).toFixed(2) + ' ج.م');
-            $('#paid_amount').val(net);
-            $('#paid_amount').trigger('input');
+            $('#payment_total').text(total.toFixed(2) + ' ج.م');
+            $('#payment_net').text(net.toFixed(2) + ' ج.م');
+            $('#paid_amount').val(0);
+            $('#discount_value').val(0);
+            $('#discount_percent').val(0);
+            $('#later_amount').val('0.00');
         });
+        
+        // حساب الخصم بالقيمة
+        $('#discount_value').on('input', function() {
+            const total = parseFloat($('#total').val()) || 0;
+            const discountValue = parseFloat($(this).val()) || 0;
+            
+            // حساب النسبة المئوية
+            const discountPercent = total > 0 ? (discountValue / total * 100) : 0;
+            $('#discount_percent').val(discountPercent.toFixed(2));
+            
+            // حساب الصافي
+            const net = total - discountValue;
+            $('#payment_net').text(net.toFixed(2) + ' ج.م');
+            $('#net_val').val(net.toFixed(2));
+            $('#discount').val(discountValue.toFixed(2));
+            
+            // تحديث الآجل
+            updateLaterAmount();
+        });
+        
+        // حساب الخصم بالنسبة المئوية
+        $('#discount_percent').on('input', function() {
+            const total = parseFloat($('#total').val()) || 0;
+            const discountPercent = parseFloat($(this).val()) || 0;
+            
+            // حساب القيمة
+            const discountValue = total * (discountPercent / 100);
+            $('#discount_value').val(discountValue.toFixed(2));
+            
+            // حساب الصافي
+            const net = total - discountValue;
+            $('#payment_net').text(net.toFixed(2) + ' ج.م');
+            $('#net_val').val(net.toFixed(2));
+            $('#discount').val(discountValue.toFixed(2));
+            
+            // تحديث الآجل
+            updateLaterAmount();
+        });
+        
+        // تحديث المبلغ المدفوع
+        $('#paid_amount').on('input', function() {
+            updateLaterAmount();
+        });
+        
+        // دالة تحديث قيمة الآجل
+        function updateLaterAmount() {
+            const net = parseFloat($('#net_val').val()) || 0;
+            const paid = parseFloat($('#paid_amount').val()) || 0;
+            const later = net - paid;
+            
+            $('#later_amount').val(later.toFixed(2));
+            
+            // تغيير لون الآجل حسب القيمة
+            if (later > 0) {
+                $('#later_amount').removeClass('text-success').addClass('text-danger');
+            } else {
+                $('#later_amount').removeClass('text-danger').addClass('text-success');
+            }
+        }
     </script>
 </body>
 </html>
