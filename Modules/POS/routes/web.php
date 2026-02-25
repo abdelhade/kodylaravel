@@ -13,6 +13,8 @@ Route::middleware('check.auth')->group(function () {
     Route::post('/pos/search-item', [POSController::class, 'searchItem'])->name('pos.search-item');
     Route::post('/pos/save-order', [POSController::class, 'saveOrder'])->name('pos.save-order');
     Route::get('/pos/recent-orders', [POSController::class, 'getRecentOrders'])->name('pos.recent-orders');
+    Route::get('/pos/order/{id}/details', [POSController::class, 'getOrderDetails'])->name('pos.order.details');
+    Route::delete('/pos/order/{id}', [POSController::class, 'deleteOrder'])->name('pos.order.delete');
     Route::delete('/pos/delete/{id}', [POSController::class, 'deleteOrder'])->name('pos.delete');
     Route::get('/pos/print/{id}', [POSController::class, 'printOrder'])->name('pos.print');
     

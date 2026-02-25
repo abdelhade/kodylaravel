@@ -1,7 +1,6 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -65,7 +64,7 @@
                                         <td>{{ $employee->salary }}</td>
                                         <td>{{ $employee->info }}</td>
                                         <td>
-                                            {{-- <a class="btn btn-warning" href="{{ route('employees.edit', ['id' => $employee->id]) }}"> --}}
+                                            <a class="btn btn-warning" href="{{ route('employees.edit', ['employee' => $employee->id]) }}">
                                                 <i class="fa fa-pen"></i>
                                             </a>
                                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delemp{{ $employee->id }}">
@@ -105,5 +104,5 @@
             </div>
         </div>
     </section>
-</div>
+
 @endsection

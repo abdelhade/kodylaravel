@@ -271,7 +271,7 @@ if (document.getElementById("passwordForm")) {
 
         var enteredPassword = document.getElementById("password").value;
 
-        var storedPassword = "{{ isset($settings['edit_pass']) ? $settings['edit_pass'] : '' }}"; // Make sure it's properly escaped
+        var storedPassword = "{{ isset($settings->edit_pass) ? $settings->edit_pass : '' }}"; // Make sure it's properly escaped
 
         if (enteredPassword === storedPassword) {
             alert("Passwords match!");

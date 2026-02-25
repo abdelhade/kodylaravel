@@ -23,5 +23,6 @@
     "Logs": true,
     "Barcode": true,
     "Print": true,
-    "Purchases": true
+    "Purchases": true,
+    "Voucher": true
 }

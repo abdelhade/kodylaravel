@@ -145,7 +145,7 @@
     </div>
 
     <script>
-        // طباعة تلقائية عند فتح الصفحة
+        
         window.onload = function() {
             window.print();
         }

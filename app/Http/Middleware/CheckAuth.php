@@ -23,15 +23,6 @@ class CheckAuth
         $isLoggedIn = session('login') || (isset($_SESSION['login']) && $_SESSION['login']);
         
         if (!$isLoggedIn) {
-            // Log unauthorized access attempt
-            Log::warning('Unauthorized access attempt', [
-                'ip' => $request->ip(),
-                'url' => $request->fullUrl(),
-                'user_agent' => $request->userAgent(),
-                'laravel_session' => session('login'),
-                'php_session' => $_SESSION['login'] ?? 'not set',
-            ]);
-            
             // Store intended URL for redirect after login
             if ($request->isMethod('get')) {
                 session(['url.intended' => $request->fullUrl()]);

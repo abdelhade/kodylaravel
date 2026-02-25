@@ -77,7 +77,7 @@ class EmployeeController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:6|max:50',
-            'number' => 'nullable|string',
+            'number' => 'nullable|string|max:50',
             'email' => 'nullable|email',
             'dateofbirth' => 'nullable|date',
             'gender' => 'required|in:0,1',
@@ -85,6 +85,9 @@ class EmployeeController extends Controller
             'department' => 'nullable|exists:departments,id',
             'shift' => 'nullable|exists:shifts,id',
             'salary' => 'nullable|numeric',
+            'basmaid' => 'nullable|numeric',
+            'hour_extra' => 'nullable|numeric',
+            'day_extra' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
