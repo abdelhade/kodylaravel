@@ -11,6 +11,7 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::get('/pos/barcode-basic', [POSController::class, 'barcodeBasic'])->name('pos.barcode-basic');
     Route::post('/pos/search-item', [POSController::class, 'searchItem'])->name('pos.search-item');
+    Route::post('/pos/search-customer', [POSController::class, 'searchCustomerByPhone'])->name('pos.search-customer');
     Route::post('/pos/save-order', [POSController::class, 'saveOrder'])->name('pos.save-order');
     Route::get('/pos/recent-orders', [POSController::class, 'getRecentOrders'])->name('pos.recent-orders');
     Route::get('/pos/order/{id}/details', [POSController::class, 'getOrderDetails'])->name('pos.order.details');

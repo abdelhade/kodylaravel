@@ -1,12 +1,17 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
+
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1>{{ $lang['lang_departlist'] ?? 'قائمة الأقسام' }}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <a href="{{ route('departments.create') }}" class="btn btn-large btn-primary">
+                                {{ $lang['lang_add_new'] ?? 'إضافة جديد' }}
+                            </a>
                 </div>
             </div>
         </div>
@@ -16,13 +21,6 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <a href="{{ route('departments.create') }}" class="btn btn-large btn-primary">
-                                {{ $lang['lang_add_new'] ?? 'إضافة جديد' }}
-                            </a>
-                        </h3>
-                    </div>
                     <div class="card-body">
                         @if(session('success'))
                             <div class="alert alert-success">{{ session('success') }}</div>
@@ -47,11 +45,11 @@
                                         <th><a href="#">{{ $department->name }}</a></th>
                                         <th>{{ $department->info ?? '' }}</th>
                                         <th>
-                                            <a class="btn btn-warning" href="{{ route('departments.edit', ['id' => $department->id]) }}">
-                                                {{ $lang['lang_edit'] ?? 'تعديل' }}
+                                            <a class="btn btn-sm btn-success" href="{{ route('departments.edit', ['id' => $department->id]) }}">
+                                              <i class="fa fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal{{ $department->id }}">
-                                                حذف
+                                            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ $department->id }}">
+                                              <i class="fa fa-trash"></i>
                                             </button>
                                         </th>
                                     </tr>
@@ -92,5 +90,5 @@
             </div>
         </div>
     </section>
-</div>
+
 @endsection

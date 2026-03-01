@@ -15,9 +15,6 @@ use Modules\Employees\Http\Controllers\EmployeeKBIController;
 use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
-    // Resource routes
-    Route::resource('employees', EmployeesController::class)->names('employees');
-    
     // Employees routes (Converted to Blade)
     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
     Route::get('/add_employee', [EmployeeController::class, 'create'])->name('employees.create');

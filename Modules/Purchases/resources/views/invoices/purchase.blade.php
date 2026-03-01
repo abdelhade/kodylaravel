@@ -141,7 +141,7 @@
                                                             data-name="{{ $item_option->itm_name ?? ($item_option->itmname ?? 'صنف') }}"
                                                             data-units='@json($item_units)'
                                                             {{ $detail->item_id == $item_option->id ? 'selected' : '' }}>
-                                                            {{ $item_option->itm_name ?? ($item_option->itmname ?? 'صنف') }}
+                                                            {{ $item_option->iname ?? ($item_option->name2 ?? 'صنف') }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -192,9 +192,9 @@
                                                     @endphp
                                                     <option value="{{ $item->id }}"
                                                         data-price="{{ $item->cost_price }}"
-                                                        data-name="{{ $item->itm_name ?? ($item->itmname ?? 'صنف') }}"
+                                                        data-name="{{ $item->iname ?? 'صنف' }}"
                                                         data-units='@json($units)'>
-                                                        {{ $item->itm_name ?? ($item->itmname ?? 'صنف') }}
+                                                        {{ $item->iname ?? 'صنف' }}
                                                     </option>
                                                 @endforeach
                                             </select>

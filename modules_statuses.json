@@ -24,5 +24,6 @@
     "Barcode": true,
     "Print": true,
     "Purchases": true,
-    "Voucher": true
+    "Voucher": true,
+    "CRM": true
 }

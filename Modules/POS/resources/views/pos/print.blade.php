@@ -12,63 +12,149 @@
         }
         body {
             font-family: 'Arial', sans-serif;
-            padding: 20px;
+            width: 250px;
+            margin: 0 auto;
+            padding: 5px;
+            font-size: 10px;
             direction: rtl;
+            background: white;
         }
         .invoice {
-            max-width: 800px;
-            margin: 0 auto;
-            border: 2px solid #333;
-            padding: 20px;
+            width: 100%;
         }
         .header {
             text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
         }
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            margin-bottom: 3px;
+            font-weight: bold;
         }
-        .invoice-info {
+        .header .invoice-number {
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin: 3px 0;
+            font-size: 9px;
         }
-        .invoice-info div {
-            flex: 1;
+        .info-row strong {
+            font-weight: bold;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 10px;
+            margin: 8px 0 4px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid #000;
+        }
+        .customer-info {
+            background: #f5f5f5;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-size: 9px;
+        }
+        .customer-info p {
+            margin: 2px 0;
+            line-height: 1.3;
+        }
+        .order-type {
+            text-align: center;
+            padding: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+            font-size: 10px;
+            border: 1px solid #000;
+            border-radius: 3px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table th, table td {
-            border: 1px solid #333;
-            padding: 10px;
-            text-align: center;
+            margin: 8px 0;
+            font-size: 9px;
         }
         table th {
-            background-color: #f0f0f0;
+            background: #000;
+            color: white;
+            padding: 4px 2px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        table td {
+            border-bottom: 1px dotted #ccc;
+            padding: 4px 2px;
+            text-align: center;
+        }
+        .item-name {
+            text-align: right !important;
             font-weight: bold;
         }
         .totals {
-            text-align: left;
-            font-size: 18px;
-            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
         }
-        .totals div {
-            margin-bottom: 10px;
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 10px;
+        }
+        .totals-row.final {
+            font-size: 12px;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 5px 0;
+            margin-top: 5px;
+        }
+        .payment-section {
+            background: #f5f5f5;
+            padding: 5px;
+            margin: 8px 0;
+            border: 1px dashed #000;
+            font-size: 9px;
+        }
+        .payment-section h3 {
+            font-size: 10px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
         }
         .footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 2px solid #333;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 2px dashed #000;
+            font-size: 9px;
+        }
+        .footer .thank-you {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .barcode {
+            text-align: center;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            letter-spacing: 2px;
         }
         @media print {
             body {
+                width: 250px;
                 padding: 0;
             }
             .no-print {
@@ -79,75 +165,156 @@
 </head>
 <body>
     <div class="invoice">
+        <!-- Header -->
         <div class="header">
-            <h1>فاتورة مبيعات - POS</h1>
-            <p>رقم الفاتورة: {{ $order->id }}</p>
+            <h1>فاتورة مبيعات</h1>
+            <div class="invoice-number">رقم: {{ $order->id }}</div>
         </div>
 
-        <div class="invoice-info">
-            <div>
-                <strong>التاريخ:</strong> {{ $order->pro_date }}<br>
-                <strong>الوقت:</strong> {{ \Carbon\Carbon::parse($order->crtime)->format('h:i A') }}
-            </div>
-            <div style="text-align: left;">
-                <strong>المستخدم:</strong> {{ $order->user }}
-            </div>
+        <!-- Date & Time -->
+        <div class="info-row">
+            <span><strong>التاريخ:</strong> {{ \Carbon\Carbon::parse($order->pro_date)->format('Y-m-d') }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>الوقت:</strong> {{ \Carbon\Carbon::parse($order->crtime)->format('h:i A') }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>الكاشير:</strong> {{ $order->user }}</span>
         </div>
 
-        @if($order->info)
-        <div style="margin-bottom: 20px;">
-            <strong>ملاحظات:</strong> {{ $order->info }}
+        <!-- Order Type -->
+        <div class="order-type">
+            @if($order->age == 1)
+                تيك أواي
+            @elseif($order->age == 2)
+                طاولة
+            @elseif($order->age == 3)
+                دليفري
+            @else
+                نقدي
+            @endif
+        </div>
+
+        <!-- Customer Info -->
+        @php
+            $customer = DB::table('acc_head')->where('id', $order->acc1)->first();
+            $deliveryInfo = null;
+            if ($order->age == 3 && $order->info) {
+                preg_match('/ديليفري - (.+?) \| موبايل: (.+?) \| عنوان: (.+?)(?:\||$)/', $order->info, $matches);
+                if (count($matches) >= 4) {
+                    $deliveryInfo = [
+                        'name' => $matches[1],
+                        'phone' => $matches[2],
+                        'address' => $matches[3]
+                    ];
+                }
+            }
+        @endphp
+        
+        @if($deliveryInfo || $customer)
+        <div class="section-title">معلومات العميل</div>
+        <div class="customer-info">
+            @if($deliveryInfo)
+                <p><strong>الاسم:</strong> {{ $deliveryInfo['name'] }}</p>
+                <p><strong>موبايل:</strong> {{ $deliveryInfo['phone'] }}</p>
+                <p><strong>العنوان:</strong> {{ $deliveryInfo['address'] }}</p>
+            @elseif($customer)
+                <p><strong>الاسم:</strong> {{ $customer->aname }}</p>
+                @if($customer->phone)
+                    <p><strong>هاتف:</strong> {{ $customer->phone }}</p>
+                @endif
+            @endif
         </div>
         @endif
 
+        <!-- Items Table -->
+        <div class="section-title">الأصناف</div>
         <table>
             <thead>
                 <tr>
-                    <th width="10%">#</th>
                     <th width="40%">الصنف</th>
-                    <th width="15%">الكمية</th>
-                    <th width="15%">السعر</th>
-                    <th width="20%">الإجمالي</th>
+                    <th width="15%">كمية</th>
+                    <th width="20%">سعر</th>
+                    <th width="25%">إجمالي</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($details as $index => $item)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $item->item_name }}</td>
-                    <td>{{ number_format($item->quantity, 2) }}</td>
+                    <td class="item-name">{{ $item->item_name }}</td>
+                    <td>{{ number_format($item->quantity, 1) }}</td>
                     <td>{{ number_format($item->price, 2) }}</td>
-                    <td>{{ number_format($item->total, 2) }}</td>
+                    <td><strong>{{ number_format($item->total, 2) }}</strong></td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
 
+        <!-- Totals -->
         <div class="totals">
-            <div>الإجمالي: {{ number_format($order->fat_total, 2) }} ج.م</div>
-            <div>الخصم: {{ number_format($order->fat_disc, 2) }} ج.م</div>
-            <div style="font-size: 22px; color: #000;">الصافي: {{ number_format($order->fat_net, 2) }} ج.م</div>
+            <div class="totals-row">
+                <span>الإجمالي:</span>
+                <span>{{ number_format($order->fat_total, 2) }} ج.م</span>
+            </div>
+            @if($order->fat_disc > 0)
+            <div class="totals-row">
+                <span>الخصم:</span>
+                <span>{{ number_format($order->fat_disc, 2) }} ج.م</span>
+            </div>
+            @endif
+            <div class="totals-row final">
+                <span>الصافي:</span>
+                <span>{{ number_format($order->fat_net, 2) }} ج.م</span>
+            </div>
         </div>
 
+        <!-- Payment Info -->
+        <div class="payment-section">
+            <h3>معلومات الدفع</h3>
+            <div class="payment-row">
+                <span>المستحق:</span>
+                <span><strong>{{ number_format($order->fat_net, 2) }} ج.م</strong></span>
+            </div>
+            <div class="payment-row">
+                <span>طريقة الدفع:</span>
+                <span>نقدي</span>
+            </div>
+            <div class="payment-row">
+                <span>الحالة:</span>
+                <span><strong>مدفوع</strong></span>
+            </div>
+        </div>
+
+        <!-- Barcode -->
+        <div class="barcode">
+            *{{ str_pad($order->id, 8, '0', STR_PAD_LEFT) }}*
+        </div>
+
+        <!-- Footer -->
         <div class="footer">
-            <p>شكراً لتعاملكم معنا</p>
-            <p style="font-size: 12px; margin-top: 10px;">تم الطباعة في: {{ now()->format('Y-m-d h:i A') }}</p>
+            <p class="thank-you">شكراً لتعاملكم معنا</p>
+            <p>نتمنى زيارتكم مرة أخرى</p>
+            <p style="margin-top: 5px; font-size: 8px;">
+                {{ now()->format('Y-m-d h:i A') }}
+            </p>
         </div>
     </div>
 
-    <div class="no-print" style="text-align: center; margin-top: 20px;">
-        <button onclick="window.print()" style="padding: 10px 30px; font-size: 16px; cursor: pointer;">
+    <div class="no-print" style="text-align: center; margin-top: 15px;">
+        <button onclick="window.print()" style="padding: 8px 20px; font-size: 12px; cursor: pointer; background: #000; color: white; border: none; border-radius: 3px; margin-left: 5px;">
             طباعة
         </button>
-        <button onclick="window.close()" style="padding: 10px 30px; font-size: 16px; cursor: pointer; margin-right: 10px;">
+        <button onclick="window.close()" style="padding: 8px 20px; font-size: 12px; cursor: pointer; background: #666; color: white; border: none; border-radius: 3px;">
             إغلاق
         </button>
     </div>
 
     <script>
-        
         window.onload = function() {
-            window.print();
+            // طباعة تلقائية بعد تحميل الصفحة
+            setTimeout(function() {
+                window.print();
+            }, 300);
         }
     </script>
 </body>

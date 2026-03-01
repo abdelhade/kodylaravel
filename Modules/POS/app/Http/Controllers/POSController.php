@@ -132,6 +132,66 @@ class POSController extends Controller
             $info = $request->info ?? '';
             $editOrderId = $request->edit ?? 0; // معرف الطلب للتعديل
 
+            // معالجة بيانات الديليفري
+            $deliveryInfo = '';
+            if ($orderType == 3 && $request->has('delivery_data')) {
+                $deliveryData = json_decode($request->delivery_data, true);
+                \Log::info('Delivery data received', ['delivery_data' => $deliveryData]);
+                
+                if ($deliveryData) {
+                    $deliveryInfo = sprintf(
+                        "ديليفري - %s | موبايل: %s | عنوان: %s",
+                        $deliveryData['name'] ?? '',
+                        $deliveryData['phone'] ?? '',
+                        $deliveryData['address'] ?? ''
+                    );
+                    
+                    // إذا كان عميل جديد، يمكن إضافته لجدول العملاء
+                    $customerId = $deliveryData['customer_id'] ?? 0;
+                    
+                    // تحويل إلى integer للمقارنة الصحيحة
+                    if (is_string($customerId)) {
+                        $customerId = intval($customerId);
+                    }
+                    
+                    \Log::info('Customer ID check', [
+                        'customer_id' => $customerId,
+                        'is_new' => ($customerId == 0)
+                    ]);
+                    
+                    if ($customerId == 0) {
+                        // إنشاء عميل جديد
+                        \Log::info('Creating new customer', [
+                            'name' => $deliveryData['name'],
+                            'phone' => $deliveryData['phone']
+                        ]);
+                        
+                        $newCustomerId = DB::table('acc_head')->insertGetId([
+                            'aname' => $deliveryData['name'],
+                            'code' => '122' . time(), // كود تلقائي
+                            'phone' => $deliveryData['phone'],
+                            'address' => $deliveryData['address'],
+                            'parent_id' => 122, // parent للعملاء
+                            'is_basic' => 0,
+                            'isdeleted' => 0,
+                            'crtime' => now(),
+                            'mdtime' => now(),
+                        ]);
+                        
+                        $clientId = $newCustomerId;
+                        \Log::info('New customer created successfully', ['customer_id' => $newCustomerId]);
+                    } else {
+                        \Log::info('Using existing customer', ['customer_id' => $customerId]);
+                        $clientId = $customerId;
+                    }
+                }
+            }
+            
+            // إضافة معلومات الديليفري للملاحظات
+            if (!empty($deliveryInfo)) {
+                $info = $info ? $info . ' | ' . $deliveryInfo : $deliveryInfo;
+            }
+
             // الأصناف جاية باسم itmname مش item_id
             $itemIds = $request->itmname ?? [];
             $quantities = $request->itmqty ?? [];
@@ -184,8 +244,15 @@ class POSController extends Controller
                 $total += ($qty * $price);
             }
 
-            $discount = 0;
+            // الحصول على الخصم من الطلب
+            $discount = floatval($request->headdisc ?? 0);
             $net = $total - $discount;
+            
+            \Log::info('Order totals calculated', [
+                'total' => $total,
+                'discount' => $discount,
+                'net' => $net
+            ]);
 
             /* ========================
              حفظ أو تحديث رأس الفاتورة
@@ -575,5 +642,59 @@ class POSController extends Controller
             'clients',
             'funds'
         ));
+    }
+
+    /**
+     * البحث عن عميل برقم الموبايل للديليفري
+     */
+    public function searchCustomerByPhone(Request $request)
+    {
+        try {
+            $phone = $request->input('phone');
+
+            if (empty($phone)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'يرجى إدخال رقم الموبايل'
+                ]);
+            }
+
+            // البحث في جدول العملاء
+            $customer = DB::table('acc_head')
+                ->where('code', 'like', '122%')
+                ->where('isdeleted', 0)
+                ->where(function($query) use ($phone) {
+                    $query->where('phone', $phone)
+                          ->orWhere('phone', 'like', '%' . $phone . '%')
+                          ->orWhere('aname', 'like', '%' . $phone . '%');
+                })
+                ->first();
+
+            if ($customer) {
+                return response()->json([
+                    'success' => true,
+                    'found' => true,
+                    'customer' => [
+                        'id' => $customer->id,
+                        'name' => $customer->aname,
+                        'phone' => $customer->phone ?? $phone,
+                        'address' => $customer->address ?? ''
+                    ]
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'found' => false,
+                    'message' => 'عميل جديد - يرجى إدخال بياناته'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Error searching customer: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ في البحث'
+            ], 500);
+        }
     }
 }
