@@ -1,8 +1,7 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
+
         <div class="container-fluid">
             <div class="card">
                 <div class="card-header">
@@ -59,8 +58,8 @@
                                         <td class="p-1">{{ $table->crtime ?? 'N/A' }}</td>
                                         <td class="p-1">{{ $table->mdtime ?? 'N/A' }}</td>
                                         <td class="p-1">
-                                            <button class="btn btn-sm bg-yellow-300" data-toggle="modal" data-target="#editModal{{ $table->id }}">
-                                                <span class="fa fa-pen"></span>
+                                            <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#editModal{{ $table->id }}">
+                                                <span class="fa fa-edit"></span>
                                             </button>
                                             <form action="{{ route('pos.tables.destroy', $table->id) }}" method="POST" style="display: inline;">
                                                 @csrf
@@ -118,8 +117,6 @@
                 </div>
             </div>
         </div>
-    </section>
-</div>
 
 <!-- Modal إضافة -->
 <div class="modal fade" id="addModal" tabindex="-1" role="dialog">

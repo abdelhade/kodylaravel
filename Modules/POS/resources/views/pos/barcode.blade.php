@@ -1273,32 +1273,58 @@
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title">
-                        <i class="fas fa-motorcycle me-2"></i>بيانات الدليفري
+                        <i class="fas fa-motorcycle me-2"></i>بيانات العميل - دليفري
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- رقم العميل -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">رقم العميل</label>
+                        <input type="text" class="form-control form-control-lg" id="delivery_customer_phone" 
+                            placeholder="أدخل رقم الموبايل" maxlength="11"
+                            style="border: 2px solid #17a2b8; font-size: 1.1rem; text-align: center;">
+                        <small class="text-muted d-block mt-1">سيتم البحث تلقائياً بعد كتابة 3 أرقام</small>
+                    </div>
+
+                    <!-- نتيجة البحث -->
+                    <div id="delivery_customer_result" class="mb-3"></div>
+
+                    <!-- رقم الموبايل -->
                     <div class="mb-3">
                         <label class="form-label">رقم الموبايل</label>
-                        <input type="text" class="form-control" id="customer_phone" 
-                            placeholder="أدخل رقم العميل">
+                        <input type="text" class="form-control" id="delivery_customer_mobile" 
+                            placeholder="رقم الموبايل" readonly
+                            style="background-color: #f8f9fa;">
                     </div>
-                    <div id="customer_result"></div>
+
+                    <!-- اسم العميل -->
                     <div class="mb-3">
                         <label class="form-label">اسم العميل</label>
-                        <input type="text" class="form-control" id="customer_name" 
+                        <input type="text" class="form-control" id="delivery_customer_name" 
                             placeholder="اسم العميل">
                     </div>
+
+                    <!-- العنوان -->
                     <div class="mb-3">
                         <label class="form-label">العنوان</label>
-                        <textarea class="form-control" id="customer_address" rows="2" 
-                            placeholder="عنوان التوصيل"></textarea>
+                        <textarea class="form-control" id="delivery_customer_address" rows="2" 
+                            placeholder="عنوان العميل"></textarea>
                     </div>
+
+                    <!-- Hidden fields -->
+                    <input type="hidden" id="delivery_customer_id" value="0">
+                    <input type="hidden" id="delivery_customer_found" value="0">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-info" onclick="confirmDelivery()">
-                        <i class="fas fa-check me-1"></i>تأكيد
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>إلغاء
+                    </button>
+                    <button type="button" class="btn btn-warning" id="btnEditCustomer" style="display: none;">
+                        <i class="fas fa-edit me-1"></i>حفظ التعديل
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnConfirmDelivery" onclick="confirmDelivery()">
+                        <i class="fas fa-check me-1"></i>تأكيد الطلب
                     </button>
                 </div>
             </div>
@@ -1380,19 +1406,208 @@
             saveOrderOnly();
         }
         
-        // تأكيد الدليفري
-        function confirmDelivery() {
-            const phone = $('#customer_phone').val().trim();
-            const name = $('#customer_name').val().trim();
-            const address = $('#customer_address').val().trim();
+        // البحث عن عميل برقم الموبايل
+        let searchTimeout;
+        $('#delivery_customer_phone').on('input', function() {
+            const phone = $(this).val().trim();
             
-            if (!phone || !name || !address) {
-                alert('يرجى ملء جميع الحقول');
+            // مسح timeout السابق
+            clearTimeout(searchTimeout);
+            
+            // إخفاء النتيجة السابقة
+            $('#delivery_customer_result').html('');
+            
+            if (phone.length < 3) {
                 return;
             }
             
+            // عرض مؤشر التحميل
+            $('#delivery_customer_result').html(`
+                <div class="alert alert-info text-center py-2">
+                    <i class="fas fa-spinner fa-spin me-2"></i>جاري البحث...
+                </div>
+            `);
+            
+            // البحث بعد 500ms من آخر كتابة
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '{{ route("pos.search-customer") }}',
+                    method: 'POST',
+                    data: {
+                        phone: phone,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success && response.found) {
+                            // عميل موجود
+                            const customer = response.customer;
+                            
+                            $('#delivery_customer_result').html(`
+                                <div class="alert alert-success py-2 mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>تم العثور على العميل</strong>
+                                </div>
+                            `);
+                            
+                            // ملء البيانات
+                            $('#delivery_customer_id').val(customer.id);
+                            $('#delivery_customer_mobile').val(customer.phone);
+                            $('#delivery_customer_name').val(customer.name);
+                            $('#delivery_customer_address').val(customer.address);
+                            $('#delivery_customer_found').val('1');
+                            
+                            // جعل الحقول قابلة للتعديل
+                            $('#delivery_customer_name').prop('readonly', false);
+                            $('#delivery_customer_address').prop('readonly', false);
+                            
+                            // إظهار زر التعديل
+                            $('#btnEditCustomer').show();
+                            $('#btnConfirmDelivery').text('تأكيد الطلب');
+                            
+                        } else if (response.success && !response.found) {
+                            // عميل جديد
+                            $('#delivery_customer_result').html(`
+                                <div class="alert alert-info py-2 mb-0">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    <strong>عميل جديد - يرجى إدخال بياناته</strong>
+                                </div>
+                            `);
+                            
+                            // مسح البيانات
+                            $('#delivery_customer_id').val('0');
+                            $('#delivery_customer_mobile').val(phone);
+                            $('#delivery_customer_name').val('').prop('readonly', false);
+                            $('#delivery_customer_address').val('').prop('readonly', false);
+                            $('#delivery_customer_found').val('0');
+                            
+                            // إخفاء زر التعديل
+                            $('#btnEditCustomer').hide();
+                            $('#btnConfirmDelivery').text('تأكيد الطلب');
+                        }
+                    },
+                    error: function() {
+                        $('#delivery_customer_result').html(`
+                            <div class="alert alert-danger py-2 mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                حدث خطأ في البحث
+                            </div>
+                        `);
+                    }
+                });
+            }, 500);
+        });
+        
+        // حفظ تعديل بيانات العميل
+        $('#btnEditCustomer').on('click', function() {
+            const customerId = $('#delivery_customer_id').val();
+            const name = $('#delivery_customer_name').val().trim();
+            const address = $('#delivery_customer_address').val().trim();
+            
+            if (!name || !address) {
+                alert('يرجى ملء الاسم والعنوان');
+                return;
+            }
+            
+            if (!confirm('هل تريد حفظ التعديلات على بيانات العميل؟')) {
+                return;
+            }
+            
+            // يمكن إضافة AJAX request لحفظ التعديلات في قاعدة البيانات
+            $.ajax({
+                url: '/customers/update/' + customerId,
+                method: 'POST',
+                data: {
+                    name: name,
+                    address: address,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    alert('تم حفظ التعديلات بنجاح');
+                },
+                error: function() {
+                    alert('حدث خطأ في حفظ التعديلات');
+                }
+            });
+        });
+        
+        // تأكيد الدليفري
+        function confirmDelivery() {
+            const phone = $('#delivery_customer_phone').val().trim();
+            const mobile = $('#delivery_customer_mobile').val().trim();
+            const name = $('#delivery_customer_name').val().trim();
+            const address = $('#delivery_customer_address').val().trim();
+            const customerId = parseInt($('#delivery_customer_id').val()) || 0;
+            
+            console.log('Confirm Delivery:', {
+                phone: phone,
+                mobile: mobile,
+                name: name,
+                address: address,
+                customerId: customerId,
+                isNew: customerId === 0
+            });
+            
+            if (!phone || !name || !address) {
+                alert('يرجى ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            // حفظ البيانات في حقول مخفية في النموذج الرئيسي
+            let deliveryDataInput = $('#delivery_data');
+            if (deliveryDataInput.length === 0) {
+                deliveryDataInput = $('<input type="hidden" id="delivery_data" name="delivery_data">');
+                $('#posForm').append(deliveryDataInput);
+            }
+            
+            const deliveryData = {
+                customer_id: customerId,
+                phone: mobile || phone,
+                name: name,
+                address: address
+            };
+            
+            console.log('Delivery data to send:', deliveryData);
+            deliveryDataInput.val(JSON.stringify(deliveryData));
+            
+            // تحديث العميل في select box - فقط إذا كان موجود
+            if (customerId > 0) {
+                $('select[name="acc2_id"]').val(customerId);
+                console.log('Updated acc2_id to:', customerId);
+            } else {
+                console.log('New customer - will be created on save');
+            }
+            
             $('#deliveryModal').modal('hide');
-            alert('تم تأكيد طلب الدليفري');
+            
+            // عرض رسالة نجاح
+            const message = customerId > 0 
+                ? 'تم تأكيد بيانات العميل: ' + name 
+                : 'سيتم إضافة عميل جديد: ' + name;
+            
+            // عرض badge بجانب زر الدليفري
+            $('#delivery_confirmed_badge').remove();
+            $('#age3').next('label').append(`
+                <span class="badge bg-success ms-1" id="delivery_confirmed_badge">
+                    <i class="fas fa-check"></i> ${name}
+                </span>
+            `);
+            
+            alert(message);
+        }
+        
+        // فتح modal الدليفري
+        function openDeliveryModal() {
+            // مسح البيانات السابقة
+            $('#delivery_customer_phone').val('');
+            $('#delivery_customer_mobile').val('');
+            $('#delivery_customer_name').val('').prop('readonly', false);
+            $('#delivery_customer_address').val('').prop('readonly', false);
+            $('#delivery_customer_id').val('0');
+            $('#delivery_customer_found').val('0');
+            $('#delivery_customer_result').html('');
+            $('#btnEditCustomer').hide();
+            
+            $('#deliveryModal').modal('show');
         }
         
         // إغلاق الشيفت

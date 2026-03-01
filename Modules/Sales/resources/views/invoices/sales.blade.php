@@ -80,10 +80,10 @@ LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($
                                                         @endphp
                                                         <option value="{{ $item_option->id }}"
                                                             data-price="{{ $item_option->cost_price }}"
-                                                            data-name="{{ $item_option->itm_name ?? ($item_option->itmname ?? 'صنف') }}"
+                                                            data-name="{{ $item_option->iname ?? 'صنف' }}"
                                                             data-units='@json($item_units)'
                                                             {{ $detail->item_id == $item_option->id ? 'selected' : '' }}>
-                                                            {{ $item_option->itm_name ?? ($item_option->itmname ?? 'صنف') }}
+                                                            {{ $item_option->iname ?? 'صنف' }}
                                                         </option>
                                                     @endforeach
                                                 </select>

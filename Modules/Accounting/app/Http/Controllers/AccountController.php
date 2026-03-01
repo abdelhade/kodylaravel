@@ -192,9 +192,6 @@ class AccountController extends Controller
 
         $parentAccounts = DB::table('acc_head')
             ->where('is_basic', 1)
-            ->when($parentId, function($q) use ($parentId) {
-                return $q->where('code', 'like', $parentId . '%');
-            })
             ->orderBy('code')
             ->get();
 

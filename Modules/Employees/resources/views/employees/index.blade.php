@@ -64,36 +64,16 @@
                                         <td>{{ $employee->salary }}</td>
                                         <td>{{ $employee->info }}</td>
                                         <td>
-                                            <a class="btn btn-warning" href="{{ route('employees.edit', ['employee' => $employee->id]) }}">
-                                                <i class="fa fa-pen"></i>
+                                            <a class="btn btn-sm btn-success" href="{{ route('employees.edit') }}?id={{ $employee->id }}">
+                                                <i class="fa fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delemp{{ $employee->id }}">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-
-                                            <!-- Delete Modal -->
-                                            <div class="modal fade" id="delemp{{ $employee->id }}">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content bg-danger">
-                                                        <div class="modal-header">
-                                                            <h4 class="modal-title">تحذير</h4>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <p>هل تريد بالتأكيد الحذف {{ $employee->name }}؟</p>
-                                                            {{-- <form action="{{ route('employees.destroy') }}?id={{ $employee->id }}" method="post"> --}}
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <input type="password" class="form-control" name="password" placeholder="كلمة المرور">
-                                                        </div>
-                                                        <div class="modal-footer justify-content-between">
-                                                            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">الغاء</button>
-                                                            <button type="submit" class="btn btn-outline-light">حذف</button>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <form action="{{ route('employees.destroy') }}?id={{ $employee->id }}" method="post" style="display: inline-block;" onsubmit="return confirm('هل تريد بالتأكيد حذف {{ $employee->name }}؟')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach

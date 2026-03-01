@@ -558,6 +558,44 @@
                     </ul>
                 </li>
 
+                <!-- تقارير المبيعات -->
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'sales-reports-menu')">
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p>
+                            تقارير المبيعات
+                            <i class="fas fa-angle-left right ms-auto"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" id="sales-reports-menu"
+                        style="display: none; background-color: rgba(255,255,255,0.05);">
+                        <li class="nav-item">
+                            <a href="{{ route('legacy', ['page' => 'sales-reports']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-file-invoice"></i>
+                                <p>تقرير المبيعات العام</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('sales.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-list"></i>
+                                <p>قائمة فواتير المبيعات</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('legacy', ['page' => 'items_summery']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-boxes"></i>
+                                <p>تقرير المبيعات حسب الصنف</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('acc-report.index', ['acc' => 'clients']) }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-users"></i>
+                                <p>تقرير المبيعات حسب العميل</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- نقاط البيع -->
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'pos-menu')">
@@ -637,6 +675,44 @@
 
                 
 
+                <!-- ادارة علاقات العملاء CRM -->
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'crm-menu')">
+                        <i class="nav-icon fas fa-handshake"></i>
+                        <p>
+                           CRM
+                            <i class="fas fa-angle-left right ms-auto"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" id="crm-menu"
+                        style="display: none; background-color: rgba(255,255,255,0.05);">
+                        <li class="nav-item">
+                            <a href="{{ url('/crm/leads') }}" class="nav-link">
+                                <i class="ml-1 fas fa-user-plus"></i>
+                                <p>العملاء المحتملون</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url('/crm/opportunities') }}" class="nav-link">
+                                <i class="ml-1 fas fa-bullseye"></i>
+                                <p>الفرص</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url('/crm/contacts') }}" class="nav-link">
+                                <i class="ml-1 fas fa-address-book"></i>
+                                <p>جهات الاتصال</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url('/crm/activities') }}" class="nav-link">
+                                <i class="ml-1 fas fa-tasks"></i>
+                                <p>الأنشطة</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- ادارة الموبايل -->
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'mobile-menu')">
@@ -654,6 +730,108 @@
                                 <p>قريباً...</p>
                             </a>
                         </li>
+                    </ul>
+                </li>
+
+                <!-- الموارد البشرية -->
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'hr-menu')">
+                        <i class="nav-icon fas fa-users-cog"></i>
+                        <p>
+                            الموارد البشرية
+                            <i class="fas fa-angle-left right ms-auto"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" id="hr-menu"
+                        style="display: none; background-color: rgba(255,255,255,0.05);">
+                        @if(Route::has('employees.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('employees.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-users"></i>
+                                <p>الموظفين</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('employees.create'))
+                        <li class="nav-item">
+                            <a href="{{ route('employees.create') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-user-plus"></i>
+                                <p>إضافة موظف</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('departments.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('departments.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-building"></i>
+                                <p>الأقسام</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('jobs.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('jobs.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-briefcase"></i>
+                                <p>الوظائف</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('shifts.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('shifts.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-clock"></i>
+                                <p>الورديات</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('job-levels.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('job-levels.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-layer-group"></i>
+                                <p>مستويات الوظائف</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('job-rules.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('job-rules.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-gavel"></i>
+                                <p>قواعد الوظائف</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('kbis.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('kbis.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-chart-bar"></i>
+                                <p>مؤشرات الأداء</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('emp-kbis.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('emp-kbis.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-tasks"></i>
+                                <p>تقييم الموظفين</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('cvs.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('cvs.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-file-alt"></i>
+                                <p>السير الذاتية</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Route::has('orders.index'))
+                        <li class="nav-item">
+                            <a href="{{ route('orders.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-clipboard-list"></i>
+                                <p>الأوامر الإدارية</p>
+                            </a>
+                        </li>
+                        @endif
                     </ul>
                 </li>
 
