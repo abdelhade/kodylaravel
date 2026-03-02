@@ -1,7 +1,7 @@
 @extends('dashboard.layout')
 
 @section('content')
-    <div class="container-fluid p-2 ">
+    <div class="container-fluid p-2">
         <h4 class="font-thin text-md text-white text-center"
             style="font-size:2em;padding:15px;background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);border-radius: 10px 10px 0 0;margin:0;">
             فواتير المشتريات
@@ -27,53 +27,127 @@
                     </div>
                 @endif
 
-                <div class="mb-3 text-left">
-                    <a href="{{ route('purchases.invoice') }}" class="btn btn-success"
-                        style="background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);border: none;">
-                        <i class="fas fa-plus"></i> فاتورة مشتريات جديدة
-                    </a>
-                    <a href="{{ route('purchases.return') }}" class="btn btn-info"
-                        style="background: linear-gradient(135deg, #29b6f6 0%, #0288d1 100%);border: none;">
-                        <i class="fas fa-undo"></i> مردود مشتريات جديد
-                    </a>
-                    <a href="{{ route('purchases.order') }}" class="btn btn-warning"
-                        style="background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);border: none;">
-                        <i class="fas fa-file-alt"></i> أمر شراء جديد
-                    </a>
+                <!-- فلتر البحث -->
+                <form method="GET" action="{{ route('purchases.index') }}" class="mb-3">
+                    <div class="row align-items-end">
+                        <div class="col-md-2">
+                            <label>من</label>
+                            <input type="date" name="from_date" class="form-control" value="{{ request('from_date', date('Y-m-01')) }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label>إلى</label>
+                            <input type="date" name="to_date" class="form-control" value="{{ request('to_date', date('Y-m-d')) }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block" style="background: #4169E1;">
+                                <i class="fas fa-search"></i> بحث
+                            </button>
+                        </div>
+                        <div class="col-md-6 text-left">
+                            <a href="{{ route('purchases.invoice') }}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> فاتورة مشتريات جديدة
+                            </a>
+                            <a href="{{ route('purchases.return') }}" class="btn btn-info">
+                                <i class="fas fa-undo"></i> مردود مشتريات
+                            </a>
+                            <a href="{{ route('purchases.order') }}" class="btn btn-warning">
+                                <i class="fas fa-file-alt"></i> أمر شراء
+                            </a>
+                            <button onclick="window.print()" class="btn btn-secondary">
+                                <i class="fas fa-print"></i> طباعة
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- الإحصائيات -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="info-box bg-info">
+                            <span class="info-box-icon"><i class="fas fa-file-invoice"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">عدد الفواتير</span>
+                                <span class="info-box-number">{{ $invoices->total() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box bg-success">
+                            <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">إجمالي المشتريات</span>
+                                <span class="info-box-number">{{ number_format($invoices->sum('fat_total'), 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box bg-warning">
+                            <span class="info-box-icon"><i class="fas fa-percent"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">إجمالي الخصومات</span>
+                                <span class="info-box-number">{{ number_format($invoices->sum('fat_disc'), 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box bg-primary">
+                            <span class="info-box-icon"><i class="fas fa-money-bill-wave"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">الصافي</span>
+                                <span class="info-box-number">{{ number_format($invoices->sum('fat_net'), 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover" style="background: white;">
                         <thead style="background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);color: white;">
                             <tr>
-                                <th width="10%" class="text-center">رقم الفاتورة</th>
-                                <th width="12%">التاريخ</th>
-                                <th width="25%">المورد</th>
-                                <th width="12%" class="text-center">الإجمالي</th>
-                                <th width="12%" class="text-center">الخصم</th>
-                                <th width="12%" class="text-center">الصافي</th>
-                                <th width="17%" class="text-center">الإجراءات</th>
+                                <th class="text-center">#</th>
+                                <th class="text-center">الوقت والتاريخ</th>
+                                <th class="text-center">اسم العملية</th>
+                                <th class="text-center">قيمة العملية</th>
+                                <th class="text-center">مبلغ الخصم</th>
+                                <th class="text-center">الصافي</th>
+                                <th class="text-center">الحساب للقابل</th>
+                                <th class="text-center">للمخزن</th>
+                                <th class="text-center">الموظف</th>
+                                <th class="text-center">معرف</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($invoices as $invoice)
+                            @forelse($invoices as $index => $invoice)
                                 <tr style="border-bottom: 1px solid #e0e0e0;">
-                                    <td class="text-center font-weight-bold">{{ $invoice->id }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($invoice->pro_date)->format('Y-m-d') }}</td>
+                                    <td class="text-center">{{ $invoices->firstItem() + $index }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($invoice->crtime)->format('Y/m/d H:i') }}</td>
                                     <td>
-                                        <span style="color: #00897b;font-weight: 600;">
-                                            @if ($invoice->info && str_contains($invoice->info, 'المورد:'))
-                                                {{ trim(explode('المورد:', $invoice->info)[1] ?? 'غير محدد') }}
-                                            @else
-                                                غير محدد
-                                            @endif
-                                        </span>
+                                        @if ($invoice->info && str_contains($invoice->info, 'المورد:'))
+                                            {{ trim(explode('المورد:', $invoice->info)[1] ?? 'غير محدد') }}
+                                        @else
+                                            {{ $invoice->info ?: 'فاتورة مشتريات' }}
+                                        @endif
                                     </td>
                                     <td class="text-center">{{ number_format($invoice->fat_total, 2) }}</td>
-                                    <td class="text-center" style="color: #d32f2f;">
-                                        {{ number_format($invoice->fat_disc, 2) }}</td>
-                                    <td class="text-center font-weight-bold" style="color: #00897b;">
-                                        {{ number_format($invoice->fat_net, 2) }}</td>
+                                    <td class="text-center" style="color: #d32f2f;">{{ number_format($invoice->fat_disc, 2) }}</td>
+                                    <td class="font-weight-bold text-center" style="color: #00897b;">{{ number_format($invoice->fat_net, 2) }}</td>
+                                    <td class="text-center">
+                                        @if($invoice->acc1_name)
+                                            {{ $invoice->acc1_name }}
+                                        @elseif($invoice->acc1)
+                                            حساب #{{ $invoice->acc1 }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($invoice->store_id)
+                                            مخزن #{{ $invoice->store_id }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td class="text-center">{{ $invoice->user_name ?? 'غير محدد' }}</td>
                                     <td class="text-center">
                                         <a href="{{ route('purchases.edit', $invoice->id) }}"
                                             class="btn btn-sm btn-warning" title="تعديل">
@@ -83,15 +157,11 @@
                                             title="حذف">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-info" onclick="printInvoice({{ $invoice->id }})"
-                                            title="طباعة">
-                                            <i class="fas fa-print"></i>
-                                        </button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4" style="color: #999;">
+                                    <td colspan="10" class="text-center py-4" style="color: #999;">
                                         <i class="fas fa-inbox" style="font-size: 2em;"></i><br>
                                         لا توجد فواتير
                                     </td>

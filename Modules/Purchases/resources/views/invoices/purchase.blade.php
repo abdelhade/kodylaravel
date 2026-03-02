@@ -46,7 +46,7 @@
                         <div class="col-md-2">
                             <label style="font-weight: 600;color: #00897b;">المورد</label>
                             <select name="acc2_id" class="form-control" required style="border: 2px solid #26a69a;">
-                                <option value="">اختر المورد</option>
+                               
                                 @foreach (DB::table('acc_head')->where('isdeleted', 0)->where('code', 'like', '211%')->orderBy('aname')->get() as $supplier)
                                     <option value="{{ $supplier->id }}"
                                         {{ $is_edit_mode && isset($invoice_data->acc2) && $invoice_data->acc2 == $supplier->id ? 'selected' : '' }}>
@@ -60,7 +60,7 @@
                             <label style="font-weight: 600;color: #00897b;">المخزن</label>
                             <select name="store_id" class="form-control" id="storeSelect" required
                                 style="border: 2px solid #26a69a;">
-                                <option value="">اختر المخزن</option>
+                                
                                 @foreach (DB::table('acc_head')->where('isdeleted', 0)->where('code', 'like', '123%')->orderBy('aname')->get() as $store)
                                     <option value="{{ $store->id }}"
                                         {{ $is_edit_mode && isset($invoice_data->store_id) && $invoice_data->store_id == $store->id ? 'selected' : '' }}>
@@ -75,7 +75,7 @@
                         <div class="col-md-2">
                             <label style="font-weight: 600;color: #00897b;">الموظف</label>
                             <select name="emp_id" class="form-control" style="border: 2px solid #26a69a;">
-                                <option value="">اختر الموظف</option>
+                                
                                 @php
                                     $employees = DB::table('employees')->where('isdeleted', 0)->get();
                                     if ($employees->isEmpty()) {
@@ -120,7 +120,12 @@
                                                 ->join('myunits', 'item_units.unit_id', '=', 'myunits.id')
                                                 ->where('item_units.item_id', $detail->item_id)
                                                 ->where('item_units.isdeleted', 0)
-                                                ->select('item_units.id', 'myunits.uname', 'item_units.u_val', 'item_units.cost_price')
+                                                ->select(
+                                                    'item_units.id',
+                                                    'myunits.uname',
+                                                    'item_units.u_val',
+                                                    'item_units.cost_price',
+                                                )
                                                 ->get();
                                         @endphp
                                         <tr>
@@ -130,10 +135,20 @@
                                                     @foreach (DB::table('myitems')->where('isdeleted', 0)->get() as $item_option)
                                                         @php
                                                             $item_units = DB::table('item_units')
-                                                                ->join('myunits', 'item_units.unit_id', '=', 'myunits.id')
+                                                                ->join(
+                                                                    'myunits',
+                                                                    'item_units.unit_id',
+                                                                    '=',
+                                                                    'myunits.id',
+                                                                )
                                                                 ->where('item_units.item_id', $item_option->id)
                                                                 ->where('item_units.isdeleted', 0)
-                                                                ->select('item_units.id', 'myunits.uname', 'item_units.u_val', 'item_units.cost_price')
+                                                                ->select(
+                                                                    'item_units.id',
+                                                                    'myunits.uname',
+                                                                    'item_units.u_val',
+                                                                    'item_units.cost_price',
+                                                                )
                                                                 ->get();
                                                         @endphp
                                                         <option value="{{ $item_option->id }}"
@@ -148,9 +163,11 @@
                                             </td>
                                             <td>
                                                 <select name="unit_id[]" class="form-control item-unit">
-                                                    <option value="1" data-uval="1">اختر الوحدة</option>
+                                                    
                                                     @foreach ($units as $unit)
-                                                        <option value="{{ $unit->id }}" data-uval="{{ $unit->u_val }}" data-price="{{ $unit->cost_price }}">
+                                                        <option value="{{ $unit->id }}"
+                                                            data-uval="{{ $unit->u_val }}"
+                                                            data-price="{{ $unit->cost_price }}">
                                                             {{ $unit->uname }}
                                                         </option>
                                                     @endforeach
@@ -202,7 +219,7 @@
                                         </td>
                                         <td>
                                             <select name="unit_id[]" class="form-control item-unit">
-                                                <option value="1" data-uval="1">اختر الوحدة</option>
+                                         
                                             </select>
                                             <input type="hidden" name="u_val[]" class="unit-uval" value="1">
                                         </td>
@@ -395,7 +412,7 @@
 
                     // تحديث قائمة الوحدات
                     let unitSelect = row.querySelector('.item-unit');
-                    unitSelect.innerHTML = '<option value="1" data-uval="1">اختر الوحدة</option>';
+                    // unitSelect.innerHTML = '<option value="1" data-uval="1">اختر الوحدة</option>';
                     units.forEach(unit => {
                         unitSelect.innerHTML +=
                             `<option value="${unit.id}" data-uval="${unit.u_val}" data-price="${unit.cost_price}">${unit.uname}</option>`;
@@ -405,8 +422,21 @@
                     $(unitSelect).off('change').on('change', function() {
                         const selectedOption = this.options[this.selectedIndex];
                         const uval = selectedOption.getAttribute('data-uval') || 1;
+                        const unitPrice = selectedOption.getAttribute('data-price');
+                        const row = $(this).closest('tr')[0];
+
+                        // تحديث قيمة u_val
                         $(this).closest('tr').find('.unit-uval').val(uval);
+
+                        // تحديث السعر إذا كان موجود
+                        if (unitPrice && unitPrice != '0') {
+                            row.querySelector('.item-price').value = unitPrice;
+                        }
+
+                        // إعادة حساب الإجمالي
+                        calculateRowTotal(row);
                     });
+
 
                     calculateRowTotal(row);
                 });
@@ -476,7 +506,7 @@
 
                     // تحديث قائمة الوحدات
                     let unitSelect = row.querySelector('.item-unit');
-                    unitSelect.innerHTML = '<option value="">اختر الوحدة</option>';
+                    
                     units.forEach(unit => {
                         unitSelect.innerHTML +=
                             `<option value="${unit.id}" data-uval="${unit.u_val}" data-price="${unit.cost_price}">${unit.uname}</option>`;

@@ -23,21 +23,79 @@
 
                     <!-- رأس الفاتورة -->
                     <div class="row mb-3" style="background: #f5f5f5;padding: 15px;border-radius: 8px;">
-                        <div class="col-md-4">
-                            <label style="font-weight: 600;color: #00897b;">التاريخ</label>
-                            <input type="date" name="pro_date" class="form-control"
-                                value="{{ $is_edit_mode && isset($invoice_data->pro_date) ? $invoice_data->pro_date : date('Y-m-d') }}" required>
+                        <div class="col-md-2">
+                            <label style="font-weight: 600;color: #00897b;">رقم الفاتورة</label>
+                            <input type="text" name="pro_serial" class="form-control"
+                                value="{{ $is_edit_mode && isset($invoice_data->pro_serial) ? $invoice_data->pro_serial : '' }}"
+                                placeholder="اختياري">
                         </div>
 
-                        <div class="col-md-8">
-                            <label style="font-weight: 600;color: #00897b;">ملاحظات</label>
-                            <input type="text" name="info" class="form-control"
-LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($invoice_data->info) ? $invoice_data->info : '' }}" 
-                                placeholder="ملاحظات الفاتورة">
+                        <div class="col-md-2">
+                            <label style="font-weight: 600;color: #00897b;">التاريخ</label>
+                            <input type="date" name="pro_date" class="form-control"
+                                value="{{ $is_edit_mode && isset($invoice_data->pro_date) ? $invoice_data->pro_date : date('Y-m-d') }}"
+                                required>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label style="font-weight: 600;color: #00897b;">تاريخ الاستحقاق</label>
+                            <input type="date" name="accural_date" class="form-control"
+                                value="{{ $is_edit_mode && isset($invoice_data->accural_date) ? $invoice_data->accural_date : '' }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label style="font-weight: 600;color: #00897b;">المورد</label>
+                            <select name="acc2_id" class="form-control" required style="border: 2px solid #26a69a;">
+                                <option value="">اختر المورد</option>
+                                @foreach (DB::table('acc_head')->where('isdeleted', 0)->where('code', 'like', '211%')->orderBy('aname')->get() as $supplier)
+                                    <option value="{{ $supplier->id }}"
+                                        {{ $is_edit_mode && isset($invoice_data->acc2) && $invoice_data->acc2 == $supplier->id ? 'selected' : '' }}>
+                                        {{ $supplier->aname }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label style="font-weight: 600;color: #00897b;">المخزن</label>
+                            <select name="store_id" class="form-control" id="storeSelect" required
+                                style="border: 2px solid #26a69a;">
+                                <option value="">اختر المخزن</option>
+                                @foreach (DB::table('acc_head')->where('isdeleted', 0)->where('code', 'like', '123%')->orderBy('aname')->get() as $store)
+                                    <option value="{{ $store->id }}"
+                                        {{ $is_edit_mode && isset($invoice_data->store_id) && $invoice_data->store_id == $store->id ? 'selected' : '' }}>
+                                        {{ $store->aname }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small id="storeInventory"
+                                style="color: #00897b;font-weight: 600;margin-top: 5px;display: block;"></small>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label style="font-weight: 600;color: #00897b;">الموظف</label>
+                            <select name="emp_id" class="form-control" style="border: 2px solid #26a69a;">
+                                <option value="">اختر الموظف</option>
+                                @php
+                                    $employees = DB::table('employees')->where('isdeleted', 0)->get();
+                                    if ($employees->isEmpty()) {
+                                        // إذا لم يوجد موظفين، أضف خيار افتراضي
+                                        echo '<option value="1">موظف افتراضي</option>';
+                                    }
+                                @endphp
+                                @foreach ($employees as $emp)
+                                    <option value="{{ $emp->id }}"
+                                        {{ $is_edit_mode && isset($invoice_data->emp_id) && $invoice_data->emp_id == $emp->id ? 'selected' : '' }}>
+                                        {{ $emp->name ?? 'موظف بدون اسم' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @if ($employees->isEmpty())
+                                <small class="text-warning">لا يوجد موظفين، سيتم استخدام الموظف الافتراضي</small>
+                            @endif
                         </div>
                     </div>
 
-                    
                     <!-- جدول الأصناف -->
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="itemsTable" style="background: white;">
@@ -80,10 +138,10 @@ LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($
                                                         @endphp
                                                         <option value="{{ $item_option->id }}"
                                                             data-price="{{ $item_option->cost_price }}"
-                                                            data-name="{{ $item_option->iname ?? 'صنف' }}"
+                                                            data-name="{{ $item_option->itm_name ?? ($item_option->itmname ?? 'صنف') }}"
                                                             data-units='@json($item_units)'
                                                             {{ $detail->item_id == $item_option->id ? 'selected' : '' }}>
-                                                            {{ $item_option->iname ?? 'صنف' }}
+                                                            {{ $item_option->iname ?? ($item_option->name2 ?? 'صنف') }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -134,9 +192,9 @@ LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($
                                                     @endphp
                                                     <option value="{{ $item->id }}"
                                                         data-price="{{ $item->cost_price }}"
-                                                        data-name="{{ $item->itm_name ?? ($item->itmname ?? 'صنف') }}"
+                                                        data-name="{{ $item->iname ?? 'صنف' }}"
                                                         data-units='@json($units)'>
-                                                        {{ $item->itm_name ?? ($item->itmname ?? 'صنف') }}
+                                                        {{ $item->iname ?? 'صنف' }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -347,7 +405,19 @@ LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($
                     $(unitSelect).off('change').on('change', function() {
                         const selectedOption = this.options[this.selectedIndex];
                         const uval = selectedOption.getAttribute('data-uval') || 1;
+                        const unitPrice = selectedOption.getAttribute('data-price');
+                        const row = $(this).closest('tr')[0];
+                        
+                        // تحديث قيمة u_val
                         $(this).closest('tr').find('.unit-uval').val(uval);
+                        
+                        // تحديث السعر إذا كان موجود
+                        if (unitPrice && unitPrice != '0') {
+                            row.querySelector('.item-price').value = unitPrice;
+                        }
+                        
+                        // إعادة حساب الإجمالي
+                        calculateRowTotal(row);
                     });
 
                     calculateRowTotal(row);
@@ -424,6 +494,27 @@ LOOOOOOOOOOOOO                                value="{{ $is_edit_mode && isset($
                             `<option value="${unit.id}" data-uval="${unit.u_val}" data-price="${unit.cost_price}">${unit.uname}</option>`;
                     });
 
+                    calculateRowTotal(row);
+                }
+                
+                // عند تغيير الوحدة
+                if (e.target.classList.contains('item-unit')) {
+                    let option = e.target.options[e.target.selectedIndex];
+                    let unitPrice = option.getAttribute('data-price');
+                    let uval = option.getAttribute('data-uval') || 1;
+                    let row = e.target.closest('tr');
+                    
+                    // تحديث السعر إذا كان موجود في بيانات الوحدة
+                    if (unitPrice && unitPrice != '0') {
+                        row.querySelector('.item-price').value = unitPrice;
+                    }
+                    
+                    // تحديث قيمة u_val المخفية
+                    let uvalInput = row.querySelector('.unit-uval');
+                    if (uvalInput) {
+                        uvalInput.value = uval;
+                    }
+                    
                     calculateRowTotal(row);
                 }
             });

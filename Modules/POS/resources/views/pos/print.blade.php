@@ -188,6 +188,16 @@
                 تيك أواي
             @elseif($order->age == 2)
                 طاولة
+                @php
+                    // جلب رقم الطاولة من info أو من جدول tables
+                    $tableNumber = null;
+                    if ($order->info && preg_match('/طاولة رقم (\d+)/', $order->info, $matches)) {
+                        $tableNumber = $matches[1];
+                    }
+                @endphp
+                @if($tableNumber)
+                    - رقم {{ $tableNumber }}
+                @endif
             @elseif($order->age == 3)
                 دليفري
             @else
@@ -195,36 +205,41 @@
             @endif
         </div>
 
-        <!-- Customer Info -->
-        @php
-            $customer = DB::table('acc_head')->where('id', $order->acc1)->first();
-            $deliveryInfo = null;
-            if ($order->age == 3 && $order->info) {
-                preg_match('/ديليفري - (.+?) \| موبايل: (.+?) \| عنوان: (.+?)(?:\||$)/', $order->info, $matches);
-                if (count($matches) >= 4) {
-                    $deliveryInfo = [
-                        'name' => $matches[1],
-                        'phone' => $matches[2],
-                        'address' => $matches[3]
-                    ];
+        <!-- Customer Info - Only for Delivery -->
+        @if($order->age == 3)
+            @php
+                $customer = DB::table('acc_head')->where('id', $order->acc1)->first();
+                $deliveryInfo = null;
+                if ($order->info) {
+                    preg_match('/ديليفري - (.+?) \| موبايل: (.+?) \| عنوان: (.+?)(?:\||$)/', $order->info, $matches);
+                    if (count($matches) >= 4) {
+                        $deliveryInfo = [
+                            'name' => $matches[1],
+                            'phone' => $matches[2],
+                            'address' => $matches[3]
+                        ];
+                    }
                 }
-            }
-        @endphp
-        
-        @if($deliveryInfo || $customer)
-        <div class="section-title">معلومات العميل</div>
-        <div class="customer-info">
-            @if($deliveryInfo)
-                <p><strong>الاسم:</strong> {{ $deliveryInfo['name'] }}</p>
-                <p><strong>موبايل:</strong> {{ $deliveryInfo['phone'] }}</p>
-                <p><strong>العنوان:</strong> {{ $deliveryInfo['address'] }}</p>
-            @elseif($customer)
-                <p><strong>الاسم:</strong> {{ $customer->aname }}</p>
-                @if($customer->phone)
-                    <p><strong>هاتف:</strong> {{ $customer->phone }}</p>
+            @endphp
+            
+            @if($deliveryInfo || $customer)
+            <div class="section-title">معلومات العميل</div>
+            <div class="customer-info">
+                @if($deliveryInfo)
+                    <p><strong>الاسم:</strong> {{ $deliveryInfo['name'] }}</p>
+                    <p><strong>موبايل:</strong> {{ $deliveryInfo['phone'] }}</p>
+                    <p><strong>العنوان:</strong> {{ $deliveryInfo['address'] }}</p>
+                @elseif($customer)
+                    <p><strong>الاسم:</strong> {{ $customer->aname }}</p>
+                    @if($customer->phone)
+                        <p><strong>هاتف:</strong> {{ $customer->phone }}</p>
+                    @endif
+                    @if($customer->address)
+                        <p><strong>العنوان:</strong> {{ $customer->address }}</p>
+                    @endif
                 @endif
+            </div>
             @endif
-        </div>
         @endif
 
         <!-- Items Table -->
@@ -256,12 +271,10 @@
                 <span>الإجمالي:</span>
                 <span>{{ number_format($order->fat_total, 2) }} ج.م</span>
             </div>
-            @if($order->fat_disc > 0)
             <div class="totals-row">
                 <span>الخصم:</span>
                 <span>{{ number_format($order->fat_disc, 2) }} ج.م</span>
             </div>
-            @endif
             <div class="totals-row final">
                 <span>الصافي:</span>
                 <span>{{ number_format($order->fat_net, 2) }} ج.م</span>

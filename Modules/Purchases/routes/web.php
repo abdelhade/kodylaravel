@@ -32,6 +32,14 @@ Route::middleware(['web', 'check.auth'])->prefix('purchases')->name('purchases.'
     
     // حذف فاتورة
     Route::delete('/delete/{id}', [PurchasesController::class, 'destroy'])->name('destroy');
+    
+    // التقارير
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [\Modules\Purchases\Http\Controllers\PurchaseReportsController::class, 'index'])->name('index');
+        Route::get('/daily', [\Modules\Purchases\Http\Controllers\PurchaseReportsController::class, 'dailyReport'])->name('daily');
+        Route::get('/items', [\Modules\Purchases\Http\Controllers\PurchaseReportsController::class, 'itemsReport'])->name('items');
+        Route::get('/suppliers', [\Modules\Purchases\Http\Controllers\PurchaseReportsController::class, 'suppliersReport'])->name('suppliers');
+    });
 });
 
 // API routes

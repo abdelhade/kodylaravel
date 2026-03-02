@@ -34,4 +34,7 @@ Route::middleware(['web', 'check.auth'])->prefix('sales')->name('sales.')->group
     
     // حذف فاتورة
     Route::delete('/delete/{id}', [SalesController::class, 'destroy'])->name('destroy');
+    
+    // التقارير
+    Route::get('/reports', [SalesController::class, 'reports'])->name('reports');
 });

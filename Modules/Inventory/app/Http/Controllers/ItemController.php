@@ -35,7 +35,15 @@ class ItemController extends Controller
             $item->units = DB::table('item_units')
                 ->where('item_id', $item->id)
                 ->join('myunits', 'item_units.unit_id', '=', 'myunits.id')
-                ->select('item_units.*', 'myunits.uname')
+                ->select(
+                    'item_units.*', 
+                    'myunits.uname',
+                    'item_units.price1',
+                    'item_units.price2',
+                    'item_units.price3',
+                    'item_units.cost_price',
+                    'item_units.u_val'
+                )
                 ->get();
             
             // Get market price (price3) from the first unit
@@ -45,6 +53,13 @@ class ItemController extends Controller
                 ->first();
             
             $item->market_price = $firstUnit ? $firstUnit->price3 : 0;
+            
+            // Get first image for the item
+            $item->image = DB::table('imgs')
+                ->where('itemid', $item->id)
+                ->where('isdeleted', 0)
+                ->orderBy('id')
+                ->value('iname');
         }
 
         // Get total count for pagination
