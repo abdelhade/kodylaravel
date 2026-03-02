@@ -30,15 +30,28 @@ class PurchasesController extends Controller
     /**
      * عرض قائمة الفواتير
      */
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = DB::table('ot_head')
-            ->where('isdeleted', 0)
-            ->whereIn('pro_tybe', [
+        $from_date = $request->input('from_date', date('Y-m-01'));
+        $to_date = $request->input('to_date', date('Y-m-d'));
+        
+        $invoices = DB::table('ot_head as h')
+            ->leftJoin('users as u', 'h.user', '=', 'u.id')
+            ->leftJoin('acc_head as a1', 'h.acc1', '=', 'a1.id')
+            ->leftJoin('acc_head as a2', 'h.acc2', '=', 'a2.id')
+            ->where('h.isdeleted', 0)
+            ->whereIn('h.pro_tybe', [
                 self::INVOICE_TYPES['PURCHASE'],
                 self::INVOICE_TYPES['PURCHASE_RETURN']
             ])
-            ->orderBy('id', 'desc')
+            ->whereBetween('h.pro_date', [$from_date, $to_date])
+            ->select(
+                'h.*',
+                'u.uname as user_name',
+                'a1.aname as acc1_name',
+                'a2.aname as acc2_name'
+            )
+            ->orderBy('h.id', 'desc')
             ->paginate(20);
 
         $settings = (array) DB::table('settings')->first();
@@ -111,13 +124,13 @@ class PurchasesController extends Controller
      */
     public function edit($id)
     {
-        $invoice = DB::table('ot_head')->where('id', $id)->first();
+        $invoice = DB::table('ot_head')->where('id', $id)->where('isdeleted', 0)->first();
         
         if (!$invoice) {
             return redirect()->route('purchases.index')->with('error', 'الفاتورة غير موجودة');
         }
 
-        $pro_tybe = $invoice->pro_tybe;
+        $pro_tybe = (int) $invoice->pro_tybe;
         $invoice_title = 'تعديل فاتورة المشتريات';
         $is_edit_mode = true;
         $invoice_data = $invoice;
@@ -143,6 +156,9 @@ class PurchasesController extends Controller
 
             $pro_tybe = $request->input('pro_tybe');
             $pro_date = $request->input('pro_date', date('Y-m-d'));
+            $store_id = $request->input('store_id');
+            $acc2_id = $request->input('acc2_id');
+            $emp_id = $request->input('emp_id');
             $headtotal = $request->input('headtotal', 0);
             $headdisc = $request->input('headdisc', 0);
             $headnet = $request->input('headnet', 0);
@@ -157,6 +173,10 @@ class PurchasesController extends Controller
             $last_op = DB::table('ot_head')->insertGetId([
                 'pro_tybe' => $pro_tybe,
                 'pro_date' => $pro_date,
+                'store_id' => $store_id,
+                'emp_id' => $emp_id,
+                'acc1' => $store_id,
+                'acc2' => $acc2_id,
                 'fat_total' => $headtotal,
                 'fat_disc' => $headdisc,
                 'fat_net' => $headnet,
@@ -191,13 +211,6 @@ class PurchasesController extends Controller
                     'total' => $qty * ($price - $disc),
                     'crtime' => now()
                 ]);
-                
-                // تحديث كمية الصنف في جدول myitems (زيادة للمشتريات)
-                if ($pro_tybe == 4) { // فاتورة مشتريات
-                    DB::table('myitems')
-                        ->where('id', $item_id)
-                        ->increment('itmqty', $qty);
-                }
                 
                 $itemsInserted++;
             }
@@ -238,6 +251,9 @@ class PurchasesController extends Controller
 
             $pro_tybe = $request->input('pro_tybe');
             $pro_date = $request->input('pro_date', date('Y-m-d'));
+            $store_id = $request->input('store_id');
+            $acc2_id = $request->input('acc2_id');
+            $emp_id = $request->input('emp_id');
             $headtotal = $request->input('headtotal', 0);
             $headdisc = $request->input('headdisc', 0);
             $headnet = $request->input('headnet', 0);
@@ -252,6 +268,10 @@ class PurchasesController extends Controller
             DB::table('ot_head')->where('id', $id)->update([
                 'info' => $info,
                 'pro_date' => $pro_date,
+                'store_id' => $store_id,
+                'emp_id' => $emp_id,
+                'acc1' => $store_id,
+                'acc2' => $acc2_id,
                 'fat_total' => $headtotal,
                 'fat_disc' => $headdisc,
                 'fat_net' => $headnet,

@@ -57,6 +57,7 @@
                         <thead>
                             <tr class="bg-light">
                                 <th>م</th>
+                                <th>صورة</th>
                                 <th>رقم الصنف</th>
                                 <th>الاسم</th>
                                 <th>الكميه</th>
@@ -73,6 +74,20 @@
                             @forelse($items as $index => $item)
                                 <tr>
                                     <td>{{ ($page - 1) * 1000 + $index + 1 }}</td>
+                                    <td>
+                                        @if($item->image)
+                                            <img src="{{ asset('uploads/' . $item->image) }}" 
+                                                 alt="{{ $item->iname }}" 
+                                                 class="img-thumbnail" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;"
+                                                 onerror="this.src='{{ asset('images/no-image.png') }}'">
+                                        @else
+                                            <div class="bg-light d-flex align-items-center justify-content-center" 
+                                                 style="width: 50px; height: 50px; border-radius: 4px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td>{{ $item->id }}</td>
                                     <td><b>{{ $item->iname }}</b></td>
                                     <td class="qty" data-row-id="{{ $item->id }}" data-original-qty="{{ $item->itmqty ?? 0 }}">
@@ -81,19 +96,23 @@
                                         </a>
                                     </td>
                                     <td class="unit">
-                                        <select name="" id="item_unit_{{ $item->id }}" class="form-control form-control-sm" data-row-id="{{ $item->id }}">
+                                        <select name="" id="item_unit_{{ $item->id }}" class="form-control form-control-sm unit-select" data-row-id="{{ $item->id }}">
                                             @foreach($item->units as $unit)
-                                                <option value="{{ $unit->u_val }}">
+                                                <option value="{{ $unit->u_val }}" 
+                                                    data-price1="{{ $unit->price1 }}"
+                                                    data-price2="{{ $unit->price2 }}"
+                                                    data-cost="{{ $unit->cost_price }}"
+                                                    data-market="{{ $unit->price3 }}">
                                                     {{ $unit->uname }} [{{ $unit->u_val }}]
                                                 </option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td>{{ $item->info }}</td>
-                                    <td><b>{{ $item->price1 }}</b></td>
-                                    <td><b>{{ $item->last_price ?? 0 }}</b></td>
-                                    <td><b>{{ $item->cost_price }}</b></td>
-                                    <td><b>{{ $item->market_price }}</b></td>
+                                    <td class="price1" id="price1_{{ $item->id }}"><b>{{ $item->price1 }}</b></td>
+                                    <td class="last-price" id="last_price_{{ $item->id }}"><b>{{ $item->last_price ?? 0 }}</b></td>
+                                    <td class="cost-price" id="cost_price_{{ $item->id }}"><b>{{ $item->cost_price }}</b></td>
+                                    <td class="market-price" id="market_price_{{ $item->id }}"><b>{{ $item->market_price }}</b></td>
                                     <td>
                                         <a class="btn btn-success btn-sm" href="{{ route('items.edit', ['edit' => $item->id]) }}">
                                             <i class="fa fa-pen"></i>
@@ -128,7 +147,7 @@
                                 </tr>
                             @empty
                             <tr>
-                                <td class='p-2' colspan="11" class="text-center py-5">
+                                <td class='p-2' colspan="12" class="text-center py-5">
                                     <div class="text-muted text-center">
                                         <i class="fas fa-folder-open fa-3x mb-3"></i>
                                         <p>لا توجد أصناف</p>
@@ -160,16 +179,29 @@
 <script>
 $(document).ready(function() {
     // Listen for changes in unit dropdowns
-    $('.unit select').change(function() {
+    $('.unit-select').change(function() {
         var rowId = $(this).data('row-id');
+        var selectedOption = $(this).find('option:selected');
         var selectedUnitValue = parseFloat($(this).val());
+        
+        // Get original quantity
         var qtyElement = $('#item_qty_' + rowId);
         var originalQty = parseFloat($('.qty[data-row-id="' + rowId + '"]').data('original-qty'));
 
+        // Update quantity
         if (selectedUnitValue != 0) {
             var newQty = originalQty / selectedUnitValue;
             qtyElement.text(newQty.toFixed(2));
         }
+
+        // Update prices from data attributes
+        var price1 = selectedOption.data('price1');
+        var cost = selectedOption.data('cost');
+        var market = selectedOption.data('market');
+        
+        $('#price1_' + rowId).html('<b>' + (price1 || 0) + '</b>');
+        $('#cost_price_' + rowId).html('<b>' + (cost || 0) + '</b>');
+        $('#market_price_' + rowId).html('<b>' + (market || 0) + '</b>');
     });
 
     // Reindex functionality

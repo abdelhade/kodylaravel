@@ -517,6 +517,12 @@
                                 <p>قائمة المشتريات</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('purchases.reports.index') }}" class="nav-link -50">
+                                <i class="ml-1 fas fa-chart-bar"></i>
+                                <p>تقارير المشتريات</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
