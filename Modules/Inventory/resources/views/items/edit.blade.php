@@ -133,9 +133,52 @@
                         </div>
 
                         {{-- الصور --}}
-                        <div class="mb-3">
-                            <label for="images" class="form-label">صور الصنف</label>
-                            <input class="form-control" type="file" id="images" name="imgs[]"  multiple>
+                        <div class="box">
+                            <label class="form-label fw-bold">صور الصنف</label>
+                            
+                            {{-- عرض الصور الحالية --}}
+                            @php
+                                $currentImages = DB::table('imgs')
+                                    ->where('itemid', $item->id)
+                                    ->where('isdeleted', 0)
+                                    ->get();
+                            @endphp
+                            
+                            @if($currentImages->count() > 0)
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">الصور الحالية:</label>
+                                    <div class="row g-2" id="current-images">
+                                        @foreach($currentImages as $img)
+                                            <div class="col-md-2 col-sm-3 col-4" id="image-{{ $img->id }}">
+                                                <div class="position-relative">
+                                                    <img src="{{ asset('uploads/' . $img->iname) }}" 
+                                                         class="img-thumbnail w-100" 
+                                                         style="height: 120px; object-fit: cover;"
+                                                         onerror="this.src='{{ asset('images/no-image.png') }}'">
+                                                    <button type="button" 
+                                                            class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-image" 
+                                                            data-image-id="{{ $img->id }}"
+                                                            style="padding: 2px 6px; font-size: 12px;">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    لا توجد صور لهذا الصنف حالياً
+                                </div>
+                            @endif
+                            
+                            {{-- رفع صور جديدة --}}
+                            <div class="mb-3">
+                                <label for="images" class="form-label">إضافة صور جديدة</label>
+                                <input class="form-control" type="file" id="images" name="imgs[]" accept="image/*" multiple>
+                                <small class="text-muted">يمكنك اختيار عدة صور (jpg, png, gif, jpeg, webp)</small>
+                            </div>
                         </div>
 
                     </div>
@@ -167,6 +210,56 @@
                 if ($('.urow').length > 1)
                     $(this).closest('.urow').remove();
                 else alert('لا يمكن حذف الوحدة الأولى');
+            });
+
+            // Delete image via AJAX
+            $(document).on('click', '.delete-image', function(e) {
+                e.preventDefault();
+                
+                if (!confirm('هل تريد حذف هذه الصورة؟')) {
+                    return;
+                }
+                
+                var button = $(this);
+                var imageId = button.data('image-id');
+                var imageContainer = $('#image-' + imageId);
+                
+                // Disable button during request
+                button.prop('disabled', true);
+                
+                $.ajax({
+                    url: '{{ route("items.delete-image") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        image_id: imageId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            imageContainer.fadeOut(300, function() {
+                                $(this).remove();
+                                
+                                // Check if no more images
+                                if ($('#current-images .col-md-2').length === 0) {
+                                    $('#current-images').parent().html(
+                                        '<div class="alert alert-info mb-3">' +
+                                        '<i class="fas fa-info-circle me-2"></i>' +
+                                        'لا توجد صور لهذا الصنف حالياً' +
+                                        '</div>'
+                                    );
+                                }
+                            });
+                        } else {
+                            alert(response.message || 'حدث خطأ أثناء حذف الصورة');
+                            button.prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('حدث خطأ أثناء حذف الصورة');
+                        console.error(xhr);
+                        button.prop('disabled', false);
+                    }
+                });
             });
 
         });

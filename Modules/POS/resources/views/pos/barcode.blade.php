@@ -8,6 +8,62 @@
     <title>نظام نقاط البيع - POS System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* تنسيق أزرار المجموعات */
+        .category-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        .category-btn.active {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+            border-color: #0d6efd !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4) !important;
+        }
+        
+        .category-btn:not(.active) {
+            background: white;
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+        
+        .category-btn:not(.active):hover {
+            background: #e7f1ff;
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+        
+        .category-btn i {
+            transition: transform 0.3s ease;
+        }
+        
+        .category-btn:hover i {
+            transform: scale(1.2);
+        }
+        
+        /* تنسيق بطاقات الأصناف */
+        .item-card {
+            transition: all 0.3s ease;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        .item-card:active {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -389,27 +445,30 @@
                         </div>
                         <div class="card-body p-2" style="overflow-y: auto; max-height: calc(100vh - 140px);">
                             <!-- Categories -->
-                            <div class="mb-2">
-                                <div class="btn-group flex-wrap" role="group">
-                                    <button type="button" class="btn btn-primary btn-sm category-btn active" data-category="all">
-                                        <i class="fas fa-th me-1"></i>الكل
+                            <div class="mb-3">
+                                <div class="d-flex flex-wrap gap-2" role="group">
+                                    <button type="button" class="btn btn-primary category-btn active shadow-sm" 
+                                            data-category="all"
+                                            style="border-radius: 20px; padding: 8px 20px; font-weight: 600; font-size: 0.9rem;">
+                                        <i class="fas fa-th me-2"></i>الكل
                                     </button>
                                     @php
                                         try {
-                                            // جلب المجموعات من acc_head
-                                            $categories = DB::table('acc_head')
-                                                ->where('parent_id', 16)
+                                            // جلب المجموعات من item_group
+                                            $categories = DB::table('item_group')
                                                 ->where('isdeleted', 0)
-                                                ->select('id', 'aname')
+                                                ->select('id', 'gname')
+                                                ->orderBy('gname')
                                                 ->get();
                                         } catch (\Exception $e) {
                                             $categories = collect([]);
                                         }
                                     @endphp
                                     @foreach($categories as $category)
-                                        <button type="button" class="btn btn-outline-primary btn-sm category-btn" 
-                                            data-category="{{ $category->id }}">
-                                            {{ $category->aname }}
+                                        <button type="button" class="btn btn-outline-primary category-btn shadow-sm" 
+                                            data-category="{{ $category->id }}"
+                                            style="border-radius: 20px; padding: 8px 20px; font-weight: 600; font-size: 0.9rem; border-width: 2px;">
+                                            <i class="fas fa-folder me-2"></i>{{ $category->gname }}
                                         </button>
                                     @endforeach
                                 </div>
@@ -424,6 +483,15 @@
                                             ->select('m.*')
                                             ->orderBy('m.iname')
                                             ->get();
+                                        
+                                        // جلب الصور من جدول imgs
+                                        foreach ($items as $item) {
+                                            $item->image = DB::table('imgs')
+                                                ->where('itemid', $item->id)
+                                                ->where('isdeleted', 0)
+                                                ->orderBy('id')
+                                                ->value('iname');
+                                        }
                                     } catch (\Exception $e) {
                                         $items = collect([]);
                                     }
@@ -432,27 +500,42 @@
                                     @foreach($items as $item)
                                         <div class="col-6 col-md-4 col-lg-3 col-xl-2 item-wrapper" 
                                             data-category="{{ $item->group1 ?? '' }}">
-                                            <div class="card item-card h-100 shadow-sm" 
+                                            <div class="card item-card h-100 shadow-sm border-0" 
                                                 data-item-id="{{ $item->id }}"
                                                 data-item-name="{{ $item->iname }}"
                                                 data-item-barcode="{{ $item->barcode ?? '' }}"
                                                 data-item-price="{{ $item->price1 ?? 0 }}"
                                                 onclick="addItemToOrder(this)"
-                                                style="cursor: pointer;">
+                                                style="cursor: pointer; transition: all 0.3s ease; border-radius: 12px; overflow: hidden;">
                                                 <div class="card-body p-2 text-center">
                                                     @if(!empty($item->image))
-                                                        <img src="{{ asset('uploads/items/' . $item->image) }}" 
-                                                            class="img-fluid mb-2" style="max-height: 60px;" 
-                                                            alt="{{ $item->iname }}">
+                                                        <img src="{{ asset('uploads/' . $item->image) }}" 
+                                                            class="img-fluid mb-2 rounded" 
+                                                            style="max-height: 80px; object-fit: cover; width: 100%;" 
+                                                            alt="{{ $item->iname }}"
+                                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <div class="d-none align-items-center justify-content-center mb-2" 
+                                                            style="height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                                                            <i class="fas fa-box fa-3x text-white"></i>
+                                                        </div>
                                                     @else
-                                                        <i class="fas fa-box fa-3x text-muted mb-2"></i>
+                                                        <div class="d-flex align-items-center justify-content-center mb-2" 
+                                                            style="height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                                                            <i class="fas fa-box fa-3x text-white"></i>
+                                                        </div>
                                                     @endif
-                                                    <h6 class="card-title mb-1" style="font-size: 0.8rem;">{{ $item->iname }}</h6>
-                                                    <p class="card-text mb-0">
-                                                        <span class="badge bg-success">{{ number_format($item->price1 ?? 0, 2) }} ج.م</span>
+                                                    <h6 class="card-title mb-1 text-truncate" style="font-size: 0.85rem; font-weight: 600;">
+                                                        {{ $item->iname }}
+                                                    </h6>
+                                                    <p class="card-text mb-1">
+                                                        <span class="badge bg-success" style="font-size: 0.85rem; padding: 5px 10px;">
+                                                            {{ number_format($item->price1 ?? 0, 2) }} ج.م
+                                                        </span>
                                                     </p>
                                                     @if(!empty($item->barcode))
-                                                        <small class="text-muted d-block" style="font-size: 0.7rem;">{{ $item->barcode }}</small>
+                                                        <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                                            <i class="fas fa-barcode me-1"></i>{{ $item->barcode }}
+                                                        </small>
                                                     @endif
                                                 </div>
                                             </div>
@@ -768,8 +851,11 @@
             $('.category-btn').click(function(e) {
                 e.preventDefault();
                 
-                $('.category-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
-                $(this).removeClass('btn-outline-primary').addClass('btn-primary active');
+                // إزالة active من جميع الأزرار
+                $('.category-btn').removeClass('active');
+                
+                // إضافة active للزر المضغوط
+                $(this).addClass('active');
                 
                 const categoryId = $(this).data('category');
                 

@@ -23,7 +23,7 @@ Route::middleware(['web', 'check.auth'])->prefix('sales')->name('sales.')->group
     Route::get('/return', [SalesController::class, 'saleReturn'])->name('return');
     
     // عرض سعر
-    Route::get('/quotation', [SalesController::class, 'saleOrder'])->name('quotation');
+    Route::get('/quotation', [SalesController::class, 'quotation'])->name('quotation');
     
     // حفظ فاتورة
     Route::post('/store', [SalesController::class, 'store'])->name('store');
@@ -35,6 +35,20 @@ Route::middleware(['web', 'check.auth'])->prefix('sales')->name('sales.')->group
     // حذف فاتورة
     Route::delete('/delete/{id}', [SalesController::class, 'destroy'])->name('destroy');
     
+    // تحويل أمر بيع لفاتورة
+    Route::post('/convert-to-invoice/{id}', [SalesController::class, 'convertToInvoice'])->name('convertToInvoice');
+    
+    // تحويل عرض سعر لفاتورة
+    Route::post('/convert-quotation-to-invoice/{id}', [SalesController::class, 'convertQuotationToInvoice'])->name('convertQuotationToInvoice');
+    
     // التقارير
-    Route::get('/reports', [SalesController::class, 'reports'])->name('reports');
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'index'])->name('index');
+        Route::match(['get', 'post'], '/by-day', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'byDay'])->name('by-day');
+        Route::match(['get', 'post'], '/by-hour', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'byHour'])->name('by-hour');
+        Route::match(['get', 'post'], '/by-week', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'byWeek'])->name('by-week');
+        Route::match(['get', 'post'], '/by-month', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'byMonth'])->name('by-month');
+        Route::get('/items-summary', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'itemsSummary'])->name('items-summary');
+        Route::match(['get', 'post'], '/operations-summary', [\Modules\Sales\Http\Controllers\SalesReportsController::class, 'operationsSummary'])->name('operations-summary');
+    });
 });

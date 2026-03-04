@@ -29,6 +29,7 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/items/{id}/summary', [ItemController::class, 'summary'])->name('items.summary');
     Route::post('/items/recost', [ItemController::class, 'recost'])->name('items.recost');
     Route::post('/items/upload', [ItemController::class, 'upload'])->name('items.upload');
+    Route::post('/items/delete-image', [ItemController::class, 'deleteImage'])->name('items.delete-image');
     
     // Units routes (Converted to Blade)
     Route::get('/myunits', [UnitController::class, 'index'])->name('units.index');
