@@ -14,9 +14,11 @@ class PurchasesController extends Controller
     const INVOICE_TYPES = [
         'PURCHASE' => 4,           // مشتريات
         'SALES' => 3,              // مبيعات  
+        'PURCHASE_ORDER' => 12,    // أمر شراء (الرقم الصحيح)
+        'SALES_ORDER' => 13,       // أمر بيع
         'POS' => 9,                // كاشير
-        'PURCHASE_RETURN' => 10,   // مردود مشتريات
-        'SALES_RETURN' => 11       // مردود مبيعات
+        'PURCHASE_RETURN' => 11,   // مردود مشتريات (الرقم الصحيح)
+        'SALES_RETURN' => 10       // مردود مبيعات
     ];
 
     // تعريف أنواع العمليات المحاسبية
@@ -34,18 +36,31 @@ class PurchasesController extends Controller
     {
         $from_date = $request->input('from_date', date('Y-m-01'));
         $to_date = $request->input('to_date', date('Y-m-d'));
+        $invoice_type = $request->input('invoice_type', 'all'); // فلتر نوع الفاتورة
         
-        $invoices = DB::table('ot_head as h')
+        $query = DB::table('ot_head as h')
             ->leftJoin('users as u', 'h.user', '=', 'u.id')
             ->leftJoin('acc_head as a1', 'h.acc1', '=', 'a1.id')
             ->leftJoin('acc_head as a2', 'h.acc2', '=', 'a2.id')
             ->where('h.isdeleted', 0)
-            ->whereIn('h.pro_tybe', [
+            ->whereBetween('h.pro_date', [$from_date, $to_date]);
+        
+        // تطبيق فلتر نوع الفاتورة
+        if ($invoice_type === 'all') {
+            $query->whereIn('h.pro_tybe', [
                 self::INVOICE_TYPES['PURCHASE'],
-                self::INVOICE_TYPES['PURCHASE_RETURN']
-            ])
-            ->whereBetween('h.pro_date', [$from_date, $to_date])
-            ->select(
+                self::INVOICE_TYPES['PURCHASE_RETURN'],
+                self::INVOICE_TYPES['PURCHASE_ORDER']
+            ]);
+        } elseif ($invoice_type === 'purchase') {
+            $query->where('h.pro_tybe', self::INVOICE_TYPES['PURCHASE']);
+        } elseif ($invoice_type === 'order') {
+            $query->where('h.pro_tybe', self::INVOICE_TYPES['PURCHASE_ORDER']);
+        } elseif ($invoice_type === 'return') {
+            $query->where('h.pro_tybe', self::INVOICE_TYPES['PURCHASE_RETURN']);
+        }
+        
+        $invoices = $query->select(
                 'h.*',
                 'u.uname as user_name',
                 'a1.aname as acc1_name',
@@ -54,10 +69,16 @@ class PurchasesController extends Controller
             ->orderBy('h.id', 'desc')
             ->paginate(20);
 
+        // تحويل pro_tybe إلى integer للتأكد من المقارنة الصحيحة
+        $invoices->getCollection()->transform(function ($invoice) {
+            $invoice->pro_tybe = (int) $invoice->pro_tybe;
+            return $invoice;
+        });
+
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
 
-        return view('purchases::invoices.index', compact('invoices', 'settings', 'lang'));
+        return view('purchases::invoices.index', compact('invoices', 'settings', 'lang', 'invoice_type'));
     }
 
     /**
@@ -95,14 +116,15 @@ class PurchasesController extends Controller
      */
     public function purchaseOrder()
     {
-        $pro_tybe = 8; // نوع أمر الشراء
+        $pro_tybe = self::INVOICE_TYPES['PURCHASE_ORDER'];
         $invoice_title = 'أمر شراء';
         $is_edit_mode = false;
+        $is_purchase_order = true; // علامة لتمييز أمر الشراء
         
         $settings = (array) DB::table('settings')->first();
         $lang = $this->getLanguageArray();
         
-        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'settings', 'lang'));
+        return view('purchases::invoices.purchase', compact('pro_tybe', 'invoice_title', 'is_edit_mode', 'is_purchase_order', 'settings', 'lang'));
     }
 
     /**
@@ -212,6 +234,23 @@ class PurchasesController extends Controller
                     'crtime' => now()
                 ]);
                 
+                // تحديث المخزون حسب نوع الفاتورة
+                // أمر الشراء (نوع 8) لا يؤثر على المخزون
+                if ($pro_tybe == self::INVOICE_TYPES['PURCHASE']) {
+                    // مشتريات: زيادة الكمية
+                    DB::table('myitems')
+                        ->where('id', $item_id)
+                        ->increment('itmqty', $qty);
+                } elseif ($pro_tybe == self::INVOICE_TYPES['PURCHASE_RETURN']) {
+                    // مردود مشتريات: تقليل الكمية
+                    DB::table('myitems')
+                        ->where('id', $item_id)
+                        ->decrement('itmqty', $qty);
+                } elseif ($pro_tybe == self::INVOICE_TYPES['PURCHASE_ORDER']) {
+                    // أمر شراء: لا يؤثر على المخزون
+                    Log::info('Purchase Order created - No inventory update', ['order_id' => $last_op]);
+                }
+                
                 $itemsInserted++;
             }
             
@@ -280,6 +319,28 @@ class PurchasesController extends Controller
 
             Log::info('Invoice header updated', ['id' => $id]);
 
+            // إرجاع المخزون من التفاصيل القديمة (إلا إذا كان أمر شراء)
+            $oldDetails = DB::table('fat_details')
+                ->where('fat_id', $id)
+                ->get();
+            
+            foreach ($oldDetails as $detail) {
+                if ($pro_tybe == self::INVOICE_TYPES['PURCHASE']) {
+                    // مشتريات: نرجع بالتقليل
+                    DB::table('myitems')
+                        ->where('id', $detail->item_id)
+                        ->decrement('itmqty', $detail->quantity);
+                } elseif ($pro_tybe == self::INVOICE_TYPES['PURCHASE_RETURN']) {
+                    // مردود مشتريات: نرجع بالزيادة
+                    DB::table('myitems')
+                        ->where('id', $detail->item_id)
+                        ->increment('itmqty', $detail->quantity);
+                } elseif ($pro_tybe == self::INVOICE_TYPES['PURCHASE_ORDER']) {
+                    // أمر شراء: لا يؤثر على المخزون
+                    Log::info('Purchase Order update - No inventory rollback needed', ['order_id' => $id]);
+                }
+            }
+
             // حذف التفاصيل القديمة
             DB::table('fat_details')->where('fat_id', $id)->delete();
 
@@ -305,6 +366,22 @@ class PurchasesController extends Controller
                     'total' => $qty * ($price - $disc),
                     'crtime' => now()
                 ]);
+                
+                // تحديث المخزون حسب نوع الفاتورة (أمر الشراء لا يؤثر)
+                if ($pro_tybe == self::INVOICE_TYPES['PURCHASE']) {
+                    // مشتريات: زيادة الكمية
+                    DB::table('myitems')
+                        ->where('id', $item_id)
+                        ->increment('itmqty', $qty);
+                } elseif ($pro_tybe == self::INVOICE_TYPES['PURCHASE_RETURN']) {
+                    // مردود مشتريات: تقليل الكمية
+                    DB::table('myitems')
+                        ->where('id', $item_id)
+                        ->decrement('itmqty', $qty);
+                } elseif ($pro_tybe == self::INVOICE_TYPES['PURCHASE_ORDER']) {
+                    // أمر شراء: لا يؤثر على المخزون
+                    Log::info('Purchase Order updated - No inventory update', ['order_id' => $id]);
+                }
                 
                 $itemsInserted++;
             }
@@ -335,13 +412,48 @@ class PurchasesController extends Controller
     public function destroy($id)
     {
         try {
+            DB::beginTransaction();
+            
+            // الحصول على نوع الفاتورة
+            $invoice = DB::table('ot_head')->where('id', $id)->first();
+            
+            if (!$invoice) {
+                throw new \Exception('الفاتورة غير موجودة');
+            }
+            
+            // إرجاع المخزون من التفاصيل (إلا إذا كان أمر شراء)
+            $details = DB::table('fat_details')
+                ->where('fat_id', $id)
+                ->get();
+            
+            foreach ($details as $detail) {
+                if ($invoice->pro_tybe == self::INVOICE_TYPES['PURCHASE']) {
+                    // مشتريات: نرجع بالتقليل
+                    DB::table('myitems')
+                        ->where('id', $detail->item_id)
+                        ->decrement('itmqty', $detail->quantity);
+                } elseif ($invoice->pro_tybe == self::INVOICE_TYPES['PURCHASE_RETURN']) {
+                    // مردود مشتريات: نرجع بالزيادة
+                    DB::table('myitems')
+                        ->where('id', $detail->item_id)
+                        ->increment('itmqty', $detail->quantity);
+                } elseif ($invoice->pro_tybe == self::INVOICE_TYPES['PURCHASE_ORDER']) {
+                    // أمر شراء: لا يؤثر على المخزون
+                    Log::info('Purchase Order deleted - No inventory rollback needed', ['order_id' => $id]);
+                }
+            }
+            
+            // حذف الفاتورة والتفاصيل
             DB::table('ot_head')->where('id', $id)->update(['isdeleted' => 1]);
             DB::table('fat_details')->where('fat_id', $id)->delete();
 
+            DB::commit();
+            
             return redirect()->route('purchases.index')->with('success', 'تم حذف الفاتورة بنجاح');
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('خطأ في حذف الفاتورة: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'حدث خطأ أثناء حذف الفاتورة']);
+            return back()->withErrors(['error' => 'حدث خطأ أثناء حذف الفاتورة: ' . $e->getMessage()]);
         }
     }
 
@@ -352,5 +464,64 @@ class PurchasesController extends Controller
     {
         // Return empty array - stock_details table doesn't exist
         return response()->json(['items' => []]);
+    }
+
+    /**
+     * تحويل أمر شراء إلى فاتورة مشتريات
+     */
+    public function convertToInvoice($id)
+    {
+        try {
+            DB::beginTransaction();
+            
+            // التحقق من أن الطلب هو أمر شراء
+            $order = DB::table('ot_head')->where('id', $id)->where('isdeleted', 0)->first();
+            
+            if (!$order) {
+                throw new \Exception('أمر الشراء غير موجود');
+            }
+            
+            if ($order->pro_tybe != self::INVOICE_TYPES['PURCHASE_ORDER']) {
+                throw new \Exception('هذا ليس أمر شراء');
+            }
+            
+            // التحقق من أنه لم يتم تحويله مسبقاً
+            if (!empty($order->converted_to_invoice)) {
+                throw new \Exception('تم تحويل هذا الأمر مسبقاً');
+            }
+            
+            // تحديث حالة الأمر - نضيف علامة التحويل فقط
+            DB::table('ot_head')->where('id', $id)->update([
+                'converted_to_invoice' => 1,
+                'converted_at' => now(),
+                'mdtime' => now()
+            ]);
+            
+            // تحديث المخزون بناءً على التفاصيل
+            $details = DB::table('fat_details')->where('fat_id', $id)->get();
+            
+            foreach ($details as $detail) {
+                DB::table('myitems')
+                    ->where('id', $detail->item_id)
+                    ->increment('itmqty', $detail->quantity);
+            }
+            
+            Log::info('Purchase Order converted to Invoice', [
+                'order_id' => $id,
+                'items_count' => $details->count()
+            ]);
+            
+            DB::commit();
+            
+            return redirect()->route('purchases.index')->with('success', 'تم تحويل أمر الشراء إلى فاتورة مشتريات بنجاح');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Convert Purchase Order Error', [
+                'message' => $e->getMessage(),
+                'order_id' => $id
+            ]);
+            return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+        }
     }
 }

@@ -44,13 +44,13 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label style="font-weight: 600;color: #00897b;">المورد</label>
+                            <label style="font-weight: 600;color: #00897b;">العميل</label>
                             <select name="acc2_id" class="form-control" required style="border: 2px solid #26a69a;">
-                                <option value="">اختر المورد</option>
-                                @foreach (DB::table('acc_head')->where('isdeleted', 0)->where('code', 'like', '211%')->orderBy('aname')->get() as $supplier)
-                                    <option value="{{ $supplier->id }}"
-                                        {{ $is_edit_mode && isset($invoice_data->acc2) && $invoice_data->acc2 == $supplier->id ? 'selected' : '' }}>
-                                        {{ $supplier->aname }}
+                                <option value="">اختر العميل</option>
+                                @foreach (DB::table('acc_head')->where('isdeleted', 0)->where('code', 'like', '122%')->where('is_basic', 0)->orderBy('aname')->get() as $client)
+                                    <option value="{{ $client->id }}"
+                                        {{ $is_edit_mode && isset($invoice_data->acc2) && $invoice_data->acc2 == $client->id ? 'selected' : '' }}>
+                                        {{ $client->aname }}
                                     </option>
                                 @endforeach
                             </select>

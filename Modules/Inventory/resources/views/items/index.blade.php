@@ -115,7 +115,7 @@
                                     <td class="market-price" id="market_price_{{ $item->id }}"><b>{{ $item->market_price }}</b></td>
                                     <td>
                                         <a class="btn btn-success btn-sm" href="{{ route('items.edit', ['edit' => $item->id]) }}">
-                                            <i class="fa fa-pen"></i>
+                                            <i class="fa fa-edit"></i>
                                         </a>
                                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteitm{{ $item->id }}">
                                             <i class="fa fa-trash"></i>

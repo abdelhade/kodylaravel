@@ -33,6 +33,9 @@ Route::middleware(['web', 'check.auth'])->prefix('purchases')->name('purchases.'
     // حذف فاتورة
     Route::delete('/delete/{id}', [PurchasesController::class, 'destroy'])->name('destroy');
     
+    // تحويل أمر شراء إلى فاتورة
+    Route::post('/convert-to-invoice/{id}', [PurchasesController::class, 'convertToInvoice'])->name('convertToInvoice');
+    
     // التقارير
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [\Modules\Purchases\Http\Controllers\PurchaseReportsController::class, 'index'])->name('index');

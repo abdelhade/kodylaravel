@@ -238,7 +238,14 @@ class POSController extends Controller
                 }
 
                 if ($currentStock < $requiredQty) {
-                    throw new \Exception("المخزون غير كافي للصنف رقم {$itemId}");
+                    // التحقق من إعدادات السماح بالبيع بمخزون سالب
+                    $settings = DB::table('settings')->where('id', 1)->first();
+                    $allowNegativeStock = $settings->allow_negative_stock ?? 0;
+                    
+                    if (!$allowNegativeStock) {
+                        $itemName = DB::table('myitems')->where('id', $itemId)->value('iname');
+                        throw new \Exception("المخزون غير كافي للصنف: {$itemName} (متوفر: {$currentStock}, مطلوب: {$requiredQty})");
+                    }
                 }
 
                 $total += ($qty * $price);

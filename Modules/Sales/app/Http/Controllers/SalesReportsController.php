@@ -34,8 +34,9 @@ class SalesReportsController extends Controller
         }
 
         $data = DB::table('ot_head')
-            ->select(DB::raw('pro_date, SUM(pro_value) as total_sales'))
+            ->select(DB::raw('pro_date, SUM(COALESCE(fat_net, pro_value, 0)) as total_sales'))
             ->whereIn('pro_tybe', [9, 3])
+            ->where('isdeleted', 0)
             ->whereBetween('pro_date', [$from, $to])
             ->groupBy('pro_date')
             ->orderBy('pro_date', 'asc')
@@ -72,8 +73,9 @@ class SalesReportsController extends Controller
         }
 
         $hoursData = DB::table('ot_head')
-            ->select(DB::raw('HOUR(crtime) as sales_hour, SUM(pro_value) as total_sales'))
+            ->select(DB::raw('HOUR(crtime) as sales_hour, SUM(COALESCE(fat_net, pro_value, 0)) as total_sales'))
             ->whereIn('pro_tybe', [9, 3])
+            ->where('isdeleted', 0)
             ->whereBetween(DB::raw('DATE(crtime)'), [$from, $to])
             ->groupBy('sales_hour')
             ->orderBy('sales_hour', 'asc')
@@ -112,8 +114,9 @@ class SalesReportsController extends Controller
         }
 
         $weeks = DB::table('ot_head')
-            ->select(DB::raw('YEARWEEK(pro_date, 1) as sales_week, MIN(pro_date) as week_start, MAX(pro_date) as week_end, SUM(pro_value) as total_sales'))
+            ->select(DB::raw('YEARWEEK(pro_date, 1) as sales_week, MIN(pro_date) as week_start, MAX(pro_date) as week_end, SUM(COALESCE(fat_net, pro_value, 0)) as total_sales'))
             ->whereIn('pro_tybe', [9, 3])
+            ->where('isdeleted', 0)
             ->whereBetween('pro_date', [$from, $to])
             ->groupBy('sales_week')
             ->orderBy('sales_week', 'asc')
@@ -150,8 +153,9 @@ class SalesReportsController extends Controller
         }
 
         $months = DB::table('ot_head')
-            ->select(DB::raw("DATE_FORMAT(pro_date, '%Y-%m') as sales_month, SUM(pro_value) as total_sales"))
+            ->select(DB::raw("DATE_FORMAT(pro_date, '%Y-%m') as sales_month, SUM(COALESCE(fat_net, pro_value, 0)) as total_sales"))
             ->whereIn('pro_tybe', [9, 3])
+            ->where('isdeleted', 0)
             ->whereBetween('pro_date', [$from, $to])
             ->groupBy('sales_month')
             ->orderBy('sales_month', 'asc')
@@ -236,31 +240,53 @@ class SalesReportsController extends Controller
 
         $itemsData = [];
         foreach ($items as $item) {
+            // Get all details for this item - fat_details has pro_tybe and fat_tybe columns
             $query = DB::table('fat_details')
-                ->where('isdeleted', 0)
-                ->where('item_id', $item->id)
-                ->whereIn('fat_tybe', [9, 3]);
+                ->where('item_id', $item->id);
 
-            // Apply date filter
+            // Apply date filter if exists (using crtime from fat_details)
             if ($from && $to) {
-                $query->whereBetween('crtime', [$from . ' 00:00:00', $to . ' 23:59:59']);
+                $query->whereBetween(DB::raw('DATE(crtime)'), [$from, $to]);
             } elseif ($from) {
-                $query->where('crtime', '>=', $from . ' 00:00:00');
+                $query->where(DB::raw('DATE(crtime)'), '>=', $from);
             } elseif ($to) {
-                $query->where('crtime', '<=', $to . ' 23:59:59');
+                $query->where(DB::raw('DATE(crtime)'), '<=', $to);
             }
 
-            $sumqty = $query->sum('qty_out');
-            $sumvalue = $query->sum('det_value');
+            // Get the data
+            $details = $query->get();
+            
+            $sumqty = 0;
+            $sumvalue = 0;
+            
+            foreach ($details as $detail) {
+                // Check if this is a sales operation using fat_tybe or pro_tybe
+                $tybe = $detail->fat_tybe ?? $detail->pro_tybe ?? null;
+                if (!in_array($tybe, [9, 3])) {
+                    continue;
+                }
+                
+                // Get quantity from qty_out
+                if (isset($detail->qty_out) && $detail->qty_out > 0) {
+                    $sumqty += $detail->qty_out;
+                }
+                
+                // Get value from det_value or calculate from price * qty
+                if (isset($detail->det_value) && $detail->det_value > 0) {
+                    $sumvalue += $detail->det_value;
+                } elseif (isset($detail->price) && isset($detail->qty_out)) {
+                    $sumvalue += ($detail->price * $detail->qty_out);
+                }
+            }
 
             $itemsData[] = [
                 'id' => $item->id,
-                'code' => $item->code,
-                'iname' => $item->iname,
-                'qty' => $sumqty ?? 0,
-                'value' => $sumvalue ?? 0,
-                'price1' => $item->price1,
-                'cost_price' => $item->cost_price,
+                'code' => $item->code ?? '',
+                'iname' => $item->iname ?? '',
+                'qty' => $sumqty,
+                'value' => $sumvalue,
+                'price1' => $item->price1 ?? 0,
+                'cost_price' => $item->cost_price ?? 0,
             ];
         }
 

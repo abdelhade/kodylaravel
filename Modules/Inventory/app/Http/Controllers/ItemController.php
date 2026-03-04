@@ -359,6 +359,28 @@ class ItemController extends Controller
             }
         }
 
+        // Handle image uploads
+        if ($request->hasFile('imgs')) {
+            $allowedExtensions = ['jpg', 'png', 'gif', 'jpeg', 'webp'];
+            
+            foreach ($request->file('imgs') as $image) {
+                $extension = $image->getClientOriginalExtension();
+                
+                if (!in_array(strtolower($extension), $allowedExtensions)) {
+                    continue; // Skip invalid files
+                }
+
+                $fileName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME) . rand(1, 1000000) . '.' . $extension;
+                $image->move(public_path('uploads'), $fileName);
+
+                DB::table('imgs')->insert([
+                    'iname' => $fileName,
+                    'itemid' => $id,
+                    'created_at' => now(),
+                ]);
+            }
+        }
+
         return redirect()->route('items.index')
             ->with('success', 'تم تحديث الصنف بنجاح');
     }
@@ -415,5 +437,40 @@ class ItemController extends Controller
         // TODO: Implement Excel upload functionality
         return redirect()->route('items.index')
             ->with('success', 'تم رفع الملف بنجاح');
+    }
+
+    /**
+     * Delete item image.
+     */
+    public function deleteImage(Request $request)
+    {
+        $imageId = $request->input('image_id');
+        
+        if (!$imageId) {
+            return response()->json(['success' => false, 'message' => 'معرف الصورة مطلوب']);
+        }
+
+        // Get image info
+        $image = DB::table('imgs')->where('id', $imageId)->first();
+        
+        if (!$image) {
+            return response()->json(['success' => false, 'message' => 'الصورة غير موجودة']);
+        }
+
+        // Soft delete the image
+        DB::table('imgs')
+            ->where('id', $imageId)
+            ->update([
+                'isdeleted' => 1,
+                'updated_at' => now(),
+            ]);
+
+        // Optionally delete the physical file
+        $filePath = public_path('uploads/' . $image->iname);
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+
+        return response()->json(['success' => true, 'message' => 'تم حذف الصورة بنجاح']);
     }
 }

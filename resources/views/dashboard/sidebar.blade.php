@@ -563,45 +563,7 @@
                         </li>
                     </ul>
                 </li>
-
-                <!-- تقارير المبيعات -->
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'sales-reports-menu')">
-                        <i class="nav-icon fas fa-chart-bar"></i>
-                        <p>
-                            تقارير المبيعات
-                            <i class="fas fa-angle-left right ms-auto"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview" id="sales-reports-menu"
-                        style="display: none; background-color: rgba(255,255,255,0.05);">
-                        <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'sales-reports']) }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-file-invoice"></i>
-                                <p>تقرير المبيعات العام</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('sales.index') }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-list"></i>
-                                <p>قائمة فواتير المبيعات</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'items_summery']) }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-boxes"></i>
-                                <p>تقرير المبيعات حسب الصنف</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('acc-report.index', ['acc' => 'clients']) }}" class="nav-link -50">
-                                <i class="ml-1 fas fa-users"></i>
-                                <p>تقرير المبيعات حسب العميل</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
+                
                 <!-- نقاط البيع -->
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'pos-menu')">

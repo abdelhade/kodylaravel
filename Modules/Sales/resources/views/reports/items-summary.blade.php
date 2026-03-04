@@ -1,57 +1,61 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-body" id="horsReport">
-                    <h1>تقرير المبيعات أصناف</h1>
+<div class="container-fluid p-2">
+    <h4 class="font-thin text-md text-white text-center"
+        style="font-size:2em;padding:15px;background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius: 10px 10px 0 0;margin:0;">
+        تقرير المبيعات حسب الأصناف
+    </h4>
 
-                    <!-- نموذج الفلترة -->
-                    <form method="GET" class="row mb-4">
-                        <div class="col-md-4">
-                            <label>من تاريخ:</label>
-                            <input type="date" name="from" class="form-control" value="{{ $from ?? '' }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label>إلى تاريخ:</label>
-                            <input type="date" name="to" class="form-control" value="{{ $to ?? '' }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label style="visibility: hidden;">عرض</label>
-                            <button type="submit" class="btn btn-primary btn-block">فلتر</button>
-                        </div>
-                    </form>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label>فلتر الكمية (JS):</label>
-                            <select id="qtyFilter" class="form-control">
-                                <option value="all">عرض الكل</option>
-                                <option value="greater">أكبر من صفر</option>
-                                <option value="less">أقل من أو يساوي صفر</option>
-                                <option value="equal">يساوي صفر</option>
-                            </select>
-                        </div>
-                    </div>
+    <div class="card" style="border-radius: 0 0 10px 10px;box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+            <!-- نموذج الفلترة -->
+            <form method="GET" class="row mb-4">
+                <div class="col-md-4">
+                    <label>من تاريخ:</label>
+                    <input type="date" name="from" class="form-control" value="{{ $from ?? '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label>إلى تاريخ:</label>
+                    <input type="date" name="to" class="form-control" value="{{ $to ?? '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label style="visibility: hidden;">عرض</label>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-search"></i> فلتر
+                    </button>
+                </div>
+            </form>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>فلتر الكمية:</label>
+                    <select id="qtyFilter" class="form-control">
+                        <option value="all">عرض الكل</option>
+                        <option value="greater">أكبر من صفر</option>
+                        <option value="less">أقل من أو يساوي صفر</option>
+                        <option value="equal">يساوي صفر</option>
+                    </select>
+                </div>
+            </div>
 
-                    <!-- جدول البيانات -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="myTable" data-page-length="100">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الكود</th>
-                                    <th>اسم الصنف</th>
-                                    <th>ك المبيعات</th>
-                                    <th>ق المبيعات</th>
-                                    <th>متوسط البيع</th>
-                                    <th>س البيع</th>
-                                    <th>س ش متوسط</th>
-                                    <th>الربح</th>
-                                    <th>الربح/ المبيعات</th>
-                                </tr>
-                            </thead>
+            <!-- جدول البيانات -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover" id="myTable" data-page-length="100">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>الكود</th>
+                            <th>اسم الصنف</th>
+                            <th>ك المبيعات</th>
+                            <th>ق المبيعات</th>
+                            <th>متوسط البيع</th>
+                            <th>س البيع</th>
+                            <th>س ش متوسط</th>
+                            <th>الربح</th>
+                            <th>الربح/ المبيعات</th>
+                        </tr>
+                    </thead>
                             <tbody>
                                 @php $x = 0; @endphp
                                 @foreach($itemsData as $item)
@@ -60,9 +64,7 @@
                                         <td class="text-center">{{ $x }}</td>
                                         <td class="text-center">{{ $item['code'] }}</td>
                                         <td class="text-center">
-                                            <a class="btn btn-light btn-block" href="{{ route('items-summary', ['id' => $item['id']]) }}">
-                                                {{ $item['iname'] }}
-                                            </a>
+                                            {{ $item['iname'] }}
                                         </td>
                                         <td class="text-center qty">{{ $item['qty'] }}</td>
                                         <td class="text-center val">{{ $item['value'] }}</td>
@@ -83,8 +85,6 @@
                 </div>
             </div>
         </div>
-    </section>
-</div>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
