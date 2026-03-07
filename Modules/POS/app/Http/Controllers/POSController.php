@@ -364,6 +364,126 @@ class POSController extends Controller
                     ->update(['table_case' => 1]);
             }
 
+            /* ========================
+             إنشاء القيد المحاسبي
+             ========================= */
+            
+            // الحصول على رقم القيد التالي
+            $maxJournalId = DB::table('journal_heads')->max('journal_id') ?? 0;
+            $journalId = $maxJournalId + 1;
+            
+            // إنشاء رأس القيد
+            $journalHeadId = DB::table('journal_heads')->insertGetId([
+                'journal_id' => $journalId,
+                'total' => $net,
+                'jdate' => $proDate,
+                'details' => 'فاتورة POS _ ' . $orderId,
+                'user' => session('userid') ?? 1,
+                'op_id' => $orderId,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0,
+            ]);
+            
+            // القيد المدين (من حـ/ العميل)
+            DB::table('journal_entries')->insert([
+                'journal_id' => $journalHeadId,
+                'account_id' => $clientId,
+                'debit' => $net,
+                'credit' => 0,
+                'tybe' => 0,
+                'op_id' => $orderId,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0,
+            ]);
+            
+            // القيد الدائن (إلى حـ/ المخزن)
+            DB::table('journal_entries')->insert([
+                'journal_id' => $journalHeadId,
+                'account_id' => $storeId,
+                'debit' => 0,
+                'credit' => $net,
+                'tybe' => 1,
+                'op_id' => $orderId,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0,
+            ]);
+            
+            // تحديث أرصدة الحسابات
+            DB::statement("
+                UPDATE acc_head 
+                SET balance = (
+                    SELECT COALESCE(SUM(journal_entries.debit) - SUM(journal_entries.credit), 0) 
+                    FROM journal_entries 
+                    WHERE journal_entries.account_id = acc_head.id 
+                    AND journal_entries.isdeleted = 0
+                )
+                WHERE id IN (?, ?)
+            ", [$clientId, $storeId]);
+
+            /* ========================
+             قيد الدفع النقدي (إذا كان نقدي)
+             ========================= */
+            
+            // افتراض أن الدفع نقدي كامل في POS
+            $journalId2 = $journalId + 1;
+            
+            // إنشاء رأس قيد الدفع
+            $journalHeadId2 = DB::table('journal_heads')->insertGetId([
+                'journal_id' => $journalId2,
+                'total' => $net,
+                'jdate' => $proDate,
+                'details' => 'سند قبض نقدي _ ' . $orderId,
+                'user' => session('userid') ?? 1,
+                'op_id' => $orderId,
+                'op2' => $orderId,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0,
+            ]);
+            
+            // القيد المدين (من حـ/ الصندوق)
+            DB::table('journal_entries')->insert([
+                'journal_id' => $journalHeadId2,
+                'account_id' => $fundId,
+                'debit' => $net,
+                'credit' => 0,
+                'tybe' => 0,
+                'op_id' => $orderId,
+                'op2' => $orderId,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0,
+            ]);
+            
+            // القيد الدائن (إلى حـ/ العميل)
+            DB::table('journal_entries')->insert([
+                'journal_id' => $journalHeadId2,
+                'account_id' => $clientId,
+                'debit' => 0,
+                'credit' => $net,
+                'tybe' => 1,
+                'op_id' => $orderId,
+                'op2' => $orderId,
+                'crtime' => now(),
+                'mdtime' => now(),
+                'isdeleted' => 0,
+            ]);
+            
+            // تحديث أرصدة الحسابات (الصندوق والعميل)
+            DB::statement("
+                UPDATE acc_head 
+                SET balance = (
+                    SELECT COALESCE(SUM(journal_entries.debit) - SUM(journal_entries.credit), 0) 
+                    FROM journal_entries 
+                    WHERE journal_entries.account_id = acc_head.id 
+                    AND journal_entries.isdeleted = 0
+                )
+                WHERE id IN (?, ?)
+            ", [$fundId, $clientId]);
+
             DB::commit();
 
             \Log::info('POS Order Saved Successfully', [
