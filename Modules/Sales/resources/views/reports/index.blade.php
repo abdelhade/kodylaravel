@@ -1,7 +1,7 @@
 @extends('dashboard.layout')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid p-3">
         <div class="card">
             <div class="card-header">تقارير المبيعات</div>
 
