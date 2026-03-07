@@ -1,10 +1,9 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-    <section class="content-header">
+
         <div class="container-fluid">
-            <div class="col">
+            {{-- <div class="col"> --}}
                 <div class="card card-primary col-lg-3">
                     <div class="card-header">
                         <h3 class="card-title">{{ $lang['lang_add_new_user'] ?? 'إضافة مستخدم جديد' }}</h3>
@@ -64,10 +63,9 @@
                         </div>
                     </form>
                 </div>
-            </div>
+            {{-- </div> --}}
         </div>
-    </section>
-</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

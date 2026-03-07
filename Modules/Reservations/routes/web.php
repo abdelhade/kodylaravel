@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Reservations\Http\Controllers\ReservationsController;
 use Modules\Reservations\Http\Controllers\ReservationController;
 use Modules\Reservations\Http\Controllers\BookingController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes

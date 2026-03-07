@@ -9,7 +9,6 @@ use Modules\Attendance\Http\Controllers\ImportFPLogController;
 use Modules\Attendance\Http\Controllers\MachineLogController;
 use Modules\Attendance\Http\Controllers\ScanAttendanceController;
 use Modules\Attendance\Http\Controllers\PermitController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes
@@ -27,8 +26,6 @@ Route::middleware('check.auth')->group(function () {
     // Salary routes (Converted to Blade)
     Route::get('/calcsalary', [SalaryController::class, 'index'])->name('salary.index');
     Route::get('/add_calcsalary', [SalaryController::class, 'create'])->name('salary.create');
-    Route::post('/add_calcsalary', [LegacyController::class, 'handle'])->name('salary.calculate'); // Complex calculation - legacy for now
-    Route::post('/add_calcgroup', [LegacyController::class, 'handle'])->name('salary.calculate-group'); // Complex calculation - legacy for now
     Route::get('/calcsalary/delete', [SalaryController::class, 'destroy'])->name('salary.destroy'); // Uses ?doc= query param
     
     // Allowances routes (Converted to Blade)

@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Tasks\Http\Controllers\TasksController;
 use Modules\Tasks\Http\Controllers\TaskController;
 use Modules\Tasks\Http\Controllers\FollowupController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes
@@ -21,8 +20,4 @@ Route::middleware('check.auth')->group(function () {
     // Followup routes (Converted to Blade)
     Route::get('/followup', [FollowupController::class, 'index'])->name('followup.index');
     Route::delete('/followup/delete', [FollowupController::class, 'destroy'])->name('followup.destroy'); // Uses ?id= query param
-    
-    // Legacy routes - KPIs
-    Route::get('/kbis', [LegacyController::class, 'handle'])->name('kbis');
-    Route::get('/emp_kbis', [LegacyController::class, 'handle'])->name('emp_kbis');
 });

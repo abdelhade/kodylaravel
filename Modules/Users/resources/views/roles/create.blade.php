@@ -1,220 +1,238 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-<section class="content-header">
-<div class="container-fluid">
+<style>
+    .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    .card-header { background: linear-gradient(45deg, #007bff, #0056b3); color: white; border-radius: 15px 15px 0 0 !important; }
+    .form-section-title { border-right: 4px solid #007bff; padding-right: 10px; margin: 20px 0; font-weight: bold; color: #333; }
+    .table thead th { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; }
+    .user-checkbox { width: 18px; height: 18px; cursor: pointer; }
+    .sticky-save { position: sticky; top: 20px; z-index: 100; }
+    .table-responsive { max-height: 600px; overflow-y: auto; }
+</style>
+
+<div class="container-fluid p-3">
     @if($role['show_users'] == 1)
         <form action="{{ route('roles.store') }}" method="post">
             @csrf
-            <div class="card card-primary">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-md-10">
-                            <h3>اضافه دور جديد</h3>
+            
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-user-shield ml-2"></i> إضافة دور جديد (صلاحية)</h3>
+                    <button type="submit" class="btn btn-light btn-lg px-5 shadow-sm">
+                        <i class="fas fa-save ml-1"></i> حفظ البيانات
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="form-section-title">البيانات الأساسية</h5>
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">اسم الدور</label>
+                                        <input type="text" name="rollname" class="form-control" value="{{ old('rollname') }}" placeholder="مثلاً: مدير النظام" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">وصف الدور</label>
+                                        <input type="text" name="info" class="form-control" value="{{ old('info') }}" placeholder="وصف مختصر للمهام">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h5 class="form-section-title d-flex justify-content-between align-items-center">
+                                جدول الصلاحيات التفصيلي
+                                <div class="custom-control custom-checkbox bg-light p-2 rounded" style="font-size: 0.9rem;">
+                                    <input type="checkbox" class="custom-control-input" id="checkall">
+                                    <label class="custom-control-label" for="checkall">تحديد الكل</label>
+                                </div>
+                            </h5>
+
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                </div>
+                                <input type="text" id="itmsearch1" class="form-control" placeholder="بحث في الصلاحيات...">
+                            </div>
+
+                            <div class="table-responsive">
+                                <table id="horsTable1" class="table table-hover table-striped text-center">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-right">الموديول / الصفحة</th>
+                                            <th class="text-info">عرض</th>
+                                            <th class="text-success">إضافة</th>
+                                            <th class="text-warning">تعديل</th>
+                                            <th class="text-danger">حذف</th>
+                                            <th class="text-primary">مفضلة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $permissions = [
+                                                ['name' => 'المستخدمين', 'prefix' => 'users'],
+                                                ['name' => 'العملاء', 'prefix' => 'clients'],
+                                                ['name' => 'الموردين', 'prefix' => 'suppliers'],
+                                                ['name' => 'الصناديق', 'prefix' => 'funds'],
+                                                ['name' => 'البنوك', 'prefix' => 'banks'],
+                                                ['name' => 'المخزون', 'prefix' => 'stock'],
+                                                ['name' => 'المصروفات', 'prefix' => 'expenses'],
+                                                ['name' => 'الايرادات', 'prefix' => 'revenuses'],
+                                                ['name' => 'دائنين آخرين', 'prefix' => 'credits'],
+                                                ['name' => 'مدينين آخرين', 'prefix' => 'depits'],
+                                                ['name' => 'الشركاء', 'prefix' => 'partners'],
+                                                ['name' => 'الاصول', 'prefix' => 'assets'],
+                                                ['name' => 'الاصول القابلة للتأجير', 'prefix' => 'rentables'],
+                                                ['name' => 'الموظفين', 'prefix' => 'employees'],
+                                                ['name' => 'الاصناف', 'prefix' => 'items'],
+                                                ['name' => 'مجموعات الاصناف', 'prefix' => 'item_groups'],
+                                                ['name' => 'المبيعات', 'prefix' => 'sales'],
+                                                ['name' => 'مردود المبيعات', 'prefix' => 'resale'],
+                                                ['name' => 'المشتريات', 'prefix' => 'purchases'],
+                                                ['name' => 'مردود المشتريات', 'prefix' => 'repurchases'],
+                                                ['name' => 'سندات القبض', 'prefix' => 'recive'],
+                                                ['name' => 'سندات الدفع', 'prefix' => 'payment'],
+                                                ['name' => 'العيادات', 'prefix' => 'clinics'],
+                                                ['name' => 'الحجوزات', 'prefix' => 'reservations'],
+                                                ['name' => 'العملاء متقدم', 'prefix' => 'advanced_clients'],
+                                                ['name' => 'الادوية', 'prefix' => 'drugs'],
+                                                ['name' => 'بروفايل لعميل', 'prefix' => 'client_profile'],
+                                                ['name' => 'الفرص', 'prefix' => 'chances'],
+                                                ['name' => 'حضور وانصراف', 'prefix' => 'attandance'],
+                                                ['name' => 'المكالمات', 'prefix' => 'calls'],
+                                                ['name' => 'قيود اليومية', 'prefix' => 'journals'],
+                                                ['name' => 'حسابات الاستاذ', 'prefix' => 'gl_reports', 'disabled' => true],
+                                                ['name' => 'تقارير العيادات', 'prefix' => 'clinic_reports', 'disabled' => true],
+                                                ['name' => 'تقارير التأجير', 'prefix' => 'rent_reports', 'disabled' => true],
+                                                ['name' => 'تقاريرالمرتبات', 'prefix' => 'payroll_report', 'disabled' => true],
+                                                ['name' => 'تقارير الحضور', 'prefix' => 'hr_report', 'disabled' => true],
+                                            ];
+                                        @endphp
+                                        @foreach($permissions as $perm)
+                                            <tr class="tr1">
+                                                <td class="text-right font-weight-bold">{{ $perm['name'] }}</td>
+                                                <td><input type="checkbox" class="user-checkbox" name="show_{{ $perm['prefix'] }}" {{ old('show_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
+                                                <td><input type="checkbox" class="user-checkbox" name="add_{{ $perm['prefix'] }}" {{ old('add_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
+                                                <td><input type="checkbox" class="user-checkbox" name="edit_{{ $perm['prefix'] }}" {{ old('edit_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
+                                                <td><input type="checkbox" class="user-checkbox" name="delete_{{ $perm['prefix'] }}" {{ old('delete_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
+                                                <td><input type="checkbox" class="user-checkbox" name="is_fav_{{ $perm['prefix'] }}" {{ old('is_fav_' . $perm['prefix']) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                        </div>
-                        <button type="submit" class="btn btn-light col-sm-2">حفظ</button>
                     </div>
                 </div>
-                <div class="card-body">
-                    @if(session('error'))
-                        <div class="alert alert-danger">{{ session('error') }}</div>
-                    @endif
-                    @if($errors->any())
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group border">
-                                <label for="rollname">اسم الدور</label>
-                                <input type="text" name="rollname" class="form-control form-control-sm" value="{{ old('rollname') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="form-group border">
-                                <label for="info">وصف الدور</label>
-                                <input type="text" name="info" class="form-control form-control-sm" value="{{ old('info') }}">
-                            </div>
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="form-section-title">خيارات القائمة الجانبية</h5>
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    @php
+                                        $sidebarOptions = [
+                                            ['name' => 'البيانات الاساسية', 'key' => 'sid_entry'],
+                                            ['name' => 'المخزون', 'key' => 'sid_stock'],
+                                            ['name' => 'المبيعات', 'key' => 'sid_sales'],
+                                            ['name' => 'المشتريات', 'key' => 'sid_purchases'],
+                                            ['name' => 'السندات', 'key' => 'sid_vouchers'],
+                                            ['name' => 'العيادات', 'key' => 'sid_clinics'],
+                                            ['name' => 'إدارة علاقات العملاء (CRM)', 'key' => 'sid_crm'],
+                                            ['name' => 'الحسابات', 'key' => 'sid_accounts'],
+                                            ['name' => 'الاصول', 'key' => 'sid_assets'],
+                                            ['name' => 'التقارير', 'key' => 'sid_reports'],
+                                            ['name' => 'الموارد البشرية (HR)', 'key' => 'sid_hr'],
+                                            ['name' => 'المرتبات', 'key' => 'sid_payroll'],
+                                            ['name' => 'التأجير', 'key' => 'sid_rents'],
+                                            ['name' => 'إدارة الكروت', 'key' => 'sid_cards'],
+                                            ['name' => 'تعديل كلمات مرور المستخدمين', 'key' => 'edit_user_passwords'],
+                                        ];
+                                    @endphp
+                                    @foreach($sidebarOptions as $option)
+                                        <tr class="border-bottom">
+                                            <td>{{ $option['name'] }}</td>
+                                            <td class="text-left">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" name="{{ $option['key'] }}" class="custom-control-input user-checkbox" id="sw_{{ $option['key'] }}" {{ old($option['key'], true) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="sw_{{ $option['key'] }}"></label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="table table-responsive table-bordered table-hover">
-                                <input type="text" id="itmsearch1" class="form-control form-control-sm" placeholder="search">
-                                <center>
-                                    <table id="horsTable1" class="table">
-                                        <thead>
-                                            <tr>
-                                                <th class="">اسم الصلاحيه</th>
-                                                <th>عرض</th>
-                                                <th>جديد</th>
-                                                <th>تعديل</th>
-                                                <th>حذف</th>
-                                                <th>المفضلة</th>
-                                            </tr>
-                                            <tr>
-                                                <th>اختيار الكل <input type="checkbox" name="" id="checkall"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                                $permissions = [
-                                                    ['name' => 'المستخدمين', 'prefix' => 'users'],
-                                                    ['name' => 'العملاء', 'prefix' => 'clients'],
-                                                    ['name' => 'الموردين', 'prefix' => 'suppliers'],
-                                                    ['name' => 'الصناديق', 'prefix' => 'funds'],
-                                                    ['name' => 'البنوك', 'prefix' => 'banks'],
-                                                    ['name' => 'المخزون', 'prefix' => 'stock'],
-                                                    ['name' => 'المصروفات', 'prefix' => 'expenses'],
-                                                    ['name' => 'الايرادات', 'prefix' => 'revenuses'],
-                                                    ['name' => 'دائنين آخرين', 'prefix' => 'credits'],
-                                                    ['name' => 'مدينين آخرين', 'prefix' => 'depits'],
-                                                    ['name' => 'الشركاء', 'prefix' => 'partners'],
-                                                    ['name' => 'الاصول', 'prefix' => 'assets'],
-                                                    ['name' => 'الاصول القابلة للتأجير', 'prefix' => 'rentables'],
-                                                    ['name' => 'الموظفين', 'prefix' => 'employees'],
-                                                    ['name' => 'الاصناف', 'prefix' => 'items'],
-                                                    ['name' => 'مجموعات الاصناف', 'prefix' => 'item_groups'],
-                                                    ['name' => 'المبيعات', 'prefix' => 'sales'],
-                                                    ['name' => 'مردود المبيعات', 'prefix' => 'resale'],
-                                                    ['name' => 'المشتريات', 'prefix' => 'purchases'],
-                                                    ['name' => 'مردود المشتريات', 'prefix' => 'repurchases'],
-                                                    ['name' => 'سندات القبض', 'prefix' => 'recive'],
-                                                    ['name' => 'سندات الدفع', 'prefix' => 'payment'],
-                                                    ['name' => 'العيادات', 'prefix' => 'clinics'],
-                                                    ['name' => 'الحجوزات', 'prefix' => 'reservations'],
-                                                    ['name' => 'العملاء متقدم', 'prefix' => 'advanced_clients'],
-                                                    ['name' => 'الادوية', 'prefix' => 'drugs'],
-                                                    ['name' => 'بروفايل لعميل', 'prefix' => 'client_profile'],
-                                                    ['name' => 'الفرص', 'prefix' => 'chances'],
-                                                    ['name' => 'موديول الحضور ة الانصراف', 'prefix' => 'attandance'],
-                                                    ['name' => 'المكالمات', 'prefix' => 'calls'],
-                                                    ['name' => 'قيود اليومية', 'prefix' => 'journals'],
-                                                    ['name' => 'حسابات الاستاذ', 'prefix' => 'gl_reports', 'disabled' => true],
-                                                    ['name' => 'تقارير العيادات', 'prefix' => 'clinic_reports', 'disabled' => true],
-                                                    ['name' => 'تقارير التأجير', 'prefix' => 'rent_reports', 'disabled' => true],
-                                                    ['name' => 'تقاريرالمرتبات', 'prefix' => 'payroll_report', 'disabled' => true],
-                                                    ['name' => 'تقارير الحضور', 'prefix' => 'hr_report', 'disabled' => true],
-                                                ];
-                                            @endphp
-                                            @foreach($permissions as $perm)
-                                                <tr class="tr1">
-                                                    <td>{{ $perm['name'] }}</td>
-                                                    <td><input type="checkbox" class="user-checkbox" name="show_{{ $perm['prefix'] }}" {{ old('show_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
-                                                    <td><input type="checkbox" class="user-checkbox" name="add_{{ $perm['prefix'] }}" {{ old('add_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
-                                                    <td><input type="checkbox" class="user-checkbox" name="edit_{{ $perm['prefix'] }}" {{ old('edit_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
-                                                    <td><input type="checkbox" class="user-checkbox" name="delete_{{ $perm['prefix'] }}" {{ old('delete_' . $perm['prefix'], true) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
-                                                    <td><input type="checkbox" class="user-checkbox" name="is_fav_{{ $perm['prefix'] }}" {{ old('is_fav_' . $perm['prefix']) ? 'checked' : '' }} {{ isset($perm['disabled']) && $perm['disabled'] ? 'disabled' : '' }}></td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </center>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="table table-responsive">
-                                <table id="horsTable1" class="table table-bordered table-responsive table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>خيارات الجانب</th>
-                                            <th>عرض</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $sidebarOptions = [
-                                                ['name' => 'اظهار قائمة البيانات الاساسية من الجانب الايمن', 'key' => 'sid_entry'],
-                                                ['name' => 'اظهار قائمة المخزون من الجانب الايمن', 'key' => 'sid_stock'],
-                                                ['name' => 'اظهار قسم المبيعات من الجانب الايمن', 'key' => 'sid_sales'],
-                                                ['name' => 'اظهار قسم المشتريات من الجانب الايمن', 'key' => 'sid_purchases'],
-                                                ['name' => 'اظهار السندات من الجانب الايمن', 'key' => 'sid_vouchers'],
-                                                ['name' => 'اظهار قسم العيادات من الجانب الايمن', 'key' => 'sid_clinics'],
-                                                ['name' => 'اظهار قسم ادارة علاقات العملاء من الجانب الايمن', 'key' => 'sid_crm'],
-                                                ['name' => 'اظهار قسم الحسابات من الجانب الايمن', 'key' => 'sid_accounts'],
-                                                ['name' => 'اظهار قسم الاصول من الجانب الايمن', 'key' => 'sid_assets'],
-                                                ['name' => 'اظهار التقارير من الجانب الايمن', 'key' => 'sid_reports'],
-                                                ['name' => 'اظهار قسم اداره الموارد البشرية من الجانب الايمن', 'key' => 'sid_hr'],
-                                                ['name' => 'اظهار قسم المرتبات من الجانب الايمن', 'key' => 'sid_payroll'],
-                                                ['name' => 'اظهار قسم التأجير من الجانب الايمن', 'key' => 'sid_rents'],
-                                                ['name' => 'اظهار قسم ادارة الكروت من الجانب الايمن', 'key' => 'sid_cards'],
-                                                ['name' => 'تعديل كلمات مرور المستخدمين', 'key' => 'edit_user_passwords'],
-                                            ];
-                                        @endphp
-                                        @foreach($sidebarOptions as $option)
-                                            <tr class="tr1">
-                                                <td>{{ $option['name'] }}</td>
-                                                <td><input type="checkbox" name="{{ $option['key'] }}" class="user-checkbox" {{ old($option['key'], true) ? 'checked' : '' }}></td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
 
-                            <div class="table table-responsive">
-                                <table id="horsTable1" class="table table-bordered table-responsive table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>الخيارات العامة</th>
-                                            <th>عرض</th>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="form-section-title">إعدادات عامة</h5>
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    @php
+                                        $generalOptions = [
+                                            ['name' => 'اظهار الحجوزات المنتهية', 'key' => 'show_ended_reservation'],
+                                            ['name' => 'اظهار اجمالي الحجوزات', 'key' => 'show_total_reservation'],
+                                            ['name' => 'اظهار بيانات المريض', 'key' => 'show_client_profile', 'info' => true],
+                                            ['name' => 'اظهار مهمات كل الاشخاص', 'key' => 'show_all_tasks'],
+                                            ['name' => 'الكروت في الشاشة الرئيسية', 'key' => 'show_main_cards'],
+                                            ['name' => 'الاختصارات في الشاشة الرئيسية', 'key' => 'show_main_elements'],
+                                            ['name' => 'الجداول في الشاشة الرئيسية', 'key' => 'show_main_tables'],
+                                        ];
+                                    @endphp
+                                    @foreach($generalOptions as $option)
+                                        <tr class="border-bottom">
+                                            <td>
+                                                {{ $option['name'] }}
+                                                @if(isset($option['info']))
+                                                    <i class="fas fa-exclamation-circle text-warning" title="قد يتعارض مع إظهار بيانات العميل"></i>
+                                                @endif
+                                            </td>
+                                            <td class="text-left">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" name="{{ $option['key'] }}" class="custom-control-input user-checkbox" id="sw_{{ $option['key'] }}" {{ old($option['key'], true) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="sw_{{ $option['key'] }}"></label>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $generalOptions = [
-                                                ['name' => 'اظهار الحجوزات المنتهية', 'key' => 'show_ended_reservation'],
-                                                ['name' => 'اظهار اجمالي الحجوزات', 'key' => 'show_total_reservation'],
-                                                ['name' => '(مكرر)اظهار بيانات المريض', 'key' => 'show_client_profile'],
-                                                ['name' => 'اظهار مهمات كل الاشخاص', 'key' => 'show_all_tasks'],
-                                                ['name' => 'اظهار الكروت في الشاشة الرئيسية', 'key' => 'show_main_cards'],
-                                                ['name' => 'اظهار الاختصارات في الشاشة الرئيسية', 'key' => 'show_main_elements'],
-                                                ['name' => 'اظهار الجداول في الشاشة الرئيسية', 'key' => 'show_main_tables'],
-                                            ];
-                                        @endphp
-                                        @foreach($generalOptions as $option)
-                                            <tr class="tr1">
-                                                <td>{{ $option['name'] }} @if($option['key'] == 'show_client_profile')<span title="قد يتم التعارض مع اظهار بيانات العميل" class="text-red-500">?</span>@endif</td>
-                                                <td><input type="checkbox" name="{{ $option['key'] }}" class="user-checkbox" {{ old($option['key'], true) ? 'checked' : '' }}></td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </form>
     @else
-        <div class="alert alert-danger">{{ $lang['userErrorMassage'] ?? 'ليس لديك صلاحية للوصول إلى هذه الصفحة' }}</div>
+        <div class="alert alert-custom bg-white border-right-danger shadow-sm">
+            <i class="fas fa-lock text-danger ml-2"></i> {{ $lang['userErrorMassage'] ?? 'ليس لديك صلاحية للوصول إلى هذه الصفحة' }}
+        </div>
     @endif
-</div>
-</section>
 </div>
 
 <script>
 $(document).ready(function(){
+    // البحث في الصلاحيات
     $("#itmsearch1").on("keyup", function() {
         var value = $(this).val().toLowerCase();
-        $("#horsTable1 .tr1").filter(function() {
+        $("#horsTable1 tbody tr").filter(function() {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
         });
     });
-});
 
-document.getElementById('checkall').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.tr1 .user-checkbox:not([disabled])');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = this.checked;
+    // تحديد الكل
+    $('#checkall').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.user-checkbox:not([disabled])').prop('checked', isChecked);
     });
 });
 </script>

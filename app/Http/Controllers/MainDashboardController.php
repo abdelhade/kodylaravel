@@ -133,4 +133,14 @@ class MainDashboardController extends Controller
             'dueInstallments'
         ));
     }
+    
+    public function backup()
+    {
+        if (!session('login')) {
+            return redirect()->route('login');
+        }
+        
+        // Redirect to the native backup script
+        return redirect('/native/do/dobackup.php');
+    }
 }

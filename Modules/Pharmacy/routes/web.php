@@ -7,7 +7,6 @@ use Modules\Pharmacy\Http\Controllers\PrescriptionController;
 use Modules\Pharmacy\Http\Controllers\VisitController;
 use Modules\Pharmacy\Http\Controllers\VisitTypeController;
 use Modules\Pharmacy\Http\Controllers\PatientController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes
@@ -26,7 +25,6 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/presc', [PrescriptionController::class, 'show'])->name('prescriptions.show'); // Uses ?id= query param
     Route::get('/add_presc', [PrescriptionController::class, 'create'])->name('prescriptions.create'); // Uses ?id= query param (client id)
     Route::post('/add_presc', [PrescriptionController::class, 'store'])->name('prescriptions.store'); // Uses ?id= query param (client id)
-    Route::get('/print/presc_print', [LegacyController::class, 'handle'])->name('prescriptions.print'); // Print - legacy for now
     
     // Visits routes (Converted to Blade)
     Route::get('/visits', [VisitController::class, 'index'])->name('visits.index');
