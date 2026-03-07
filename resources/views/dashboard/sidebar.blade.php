@@ -563,7 +563,7 @@
                         </li>
                     </ul>
                 </li>
-                
+
                 <!-- نقاط البيع -->
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'pos-menu')">
@@ -821,7 +821,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'acc_report']) }}" class="nav-link -50">
+                            <a href="{{ route('acc-report.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-list"></i>
                                 <p>قائمة الحسابات مع الارصدة</p>
                             </a>
@@ -941,7 +941,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'start_balance']) }}" class="nav-link -50">
+                            <a href="{{ route('start-balance.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-balance-scale"></i>
                                 <p>الرصيد الافتتاحي للحسابات</p>
                             </a>
@@ -961,13 +961,13 @@
                     <ul class="nav nav-treeview" id="reports-menu"
                         style="display: none; background-color: rgba(255,255,255,0.05);">
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'summary']) }}" class="nav-link -50">
+                            <a href="{{ route('reports.summary') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-file-alt"></i>
                                 <p>كشف حساب</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'sales-reports']) }}" class="nav-link -50">
+                            <a href="{{ route('sales.reports.index') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-chart-bar"></i>
                                 <p>تقارير المبيعات</p>
                             </a>
@@ -979,13 +979,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'items_summery']) }}" class="nav-link -50">
+                            <a href="{{ route('sales.reports.items-summary') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-box"></i>
                                 <p>المبيعات اصناف</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('legacy', ['page' => 'reps_cl']) }}" class="nav-link -50">
+                            <a href="{{ route('reps_cl') }}" class="nav-link -50">
                                 <i class="ml-1 fas fa-hospital"></i>
                                 <p>تقارير العيادات</p>
                             </a>

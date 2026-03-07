@@ -25,7 +25,7 @@ class JournalController extends Controller
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('info', 'like', "%{$search}%")
+                $q->where('details', 'like', "%{$search}%")
                   ->orWhere('journal_id', 'like', "%{$search}%");
             });
         }
@@ -34,6 +34,9 @@ class JournalController extends Controller
 
         // Get journal details for each
         foreach ($journals as $journal) {
+            // Save the info/details text before overriding
+            $journal->info = $journal->details;
+            
             $journal->details = DB::table('journal_entries')
                 ->join('acc_head', 'journal_entries.account_id', '=', 'acc_head.id')
                 ->where('journal_entries.journal_id', $journal->id)
@@ -98,7 +101,7 @@ class JournalController extends Controller
         $journalHeadId = DB::table('journal_heads')->insertGetId([
             'journal_id' => $request->journal_id,
             'jdate' => $request->jdate,
-            'total' => $request->jdate, // Legacy field
+            'total' => $totalDebit, // Store total debit as total
             'details' => $request->info ?? null,
             'user' => $userId,
             'created_at' => now(),
@@ -145,6 +148,10 @@ class JournalController extends Controller
                 ->with('error', 'القيد غير موجود');
         }
 
+        // Save the info/details text before overriding
+        $journal->info = $journal->details;
+        
+        // Get journal entries
         $journal->details = DB::table('journal_entries')
             ->where('journal_id', $id)
             ->get();
