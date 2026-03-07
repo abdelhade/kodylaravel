@@ -45,6 +45,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('modules/kody2/dist/css/bootstrap4.2.min.css') }}">
+    <!-- Bootstrap 5 for modern components -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ asset('modules/kody2/dist/css/custom.css') }}">
     <link rel="stylesheet" href="{{ asset('modules/kody2/plugins/select2/css/select2.min.css') }}">
@@ -158,6 +160,8 @@
 
     <script src="{{ asset('modules/kody2/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('modules/kody2/dist/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('modules/kody2/dist/modal/modal.js') }}"></script>
     <script src="{{ asset('modules/kody2/dist/css/tailwind.js') }}"></script>
 </head>
