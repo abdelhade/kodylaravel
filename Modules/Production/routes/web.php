@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Production\Http\Controllers\ProductionController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Production routes (Converted to Blade)

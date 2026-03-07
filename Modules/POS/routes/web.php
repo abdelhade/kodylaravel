@@ -6,7 +6,7 @@ use Modules\POS\Http\Controllers\TableController;
 use Modules\POS\Http\Controllers\ClosedSessionController;
 
 Route::middleware('check.auth')->group(function () {
-    // POS routes (Partially converted - complex pages use LegacyController)
+    // POS routes
     // Register explicit routes first so they don't get captured by the resource {pos} parameter
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::get('/pos/barcode-basic', [POSController::class, 'barcodeBasic'])->name('pos.barcode-basic');

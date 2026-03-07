@@ -158,7 +158,7 @@
             </h3>
         </div>
         
-        <form role="form" enctype="multipart/form-data" action="{{ route('users.update', ['id' => $user->id]) }}" method="post" autocomplete="off">
+        <form role="form" enctype="multipart/form-data" action="{{ route('users.update', $user->id) }}" method="post" autocomplete="off">
             @csrf
             @method('PUT')
             <div class="card-body-clean">

@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Contracts\Http\Controllers\ContractsController;
 use Modules\Contracts\Http\Controllers\ContractController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes
@@ -28,5 +27,4 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/edit_contract', [ContractController::class, 'edit'])->name('contracts.edit'); // Uses ?id= query param
     Route::put('/edit_contract/update', [ContractController::class, 'update'])->name('contracts.update'); // Uses ?id= query param
     Route::delete('/edit_contract/delete', [ContractController::class, 'destroy'])->name('contracts.destroy'); // Uses ?id= query param
-    Route::get('/print/contracta4', [LegacyController::class, 'handle'])->name('contracts.print'); // Print contract - legacy for now
 });

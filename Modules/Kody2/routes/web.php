@@ -7,4 +7,7 @@ use Modules\Kody2\Http\Middleware\Kody2Auth;
 
 Route::prefix('kody2')->middleware(['web', Kody2Auth::class])->group(function () {
     Route::get('/dashboard', [Kody2Controller::class, 'index'])->name('kody2.dashboard');
+    Route::get('/logout', function() {
+        return redirect()->route('logout');
+    })->name('kody2.logout');
 });

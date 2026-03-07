@@ -12,7 +12,6 @@ use Modules\Employees\Http\Controllers\CVController;
 use Modules\Employees\Http\Controllers\OrderController;
 use Modules\Employees\Http\Controllers\KBIController;
 use Modules\Employees\Http\Controllers\EmployeeKBIController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Employees routes (Converted to Blade)
@@ -22,7 +21,6 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/edit_employee', [EmployeeController::class, 'edit'])->name('employees.edit'); // Uses ?id= query param
     Route::put('/edit_employee/update', [EmployeeController::class, 'update'])->name('employees.update'); // Uses ?id= query param
     Route::delete('/edit_employee/delete', [EmployeeController::class, 'destroy'])->name('employees.destroy'); // Uses ?id= query param
-    Route::get('/emprofile', [LegacyController::class, 'handle'])->name('employees.profile'); // Profile page - legacy for now
     
     // Shifts routes (Converted to Blade)
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');

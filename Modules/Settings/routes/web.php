@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Settings\Http\Controllers\SettingsController;
 use Modules\Settings\Http\Controllers\TownController;
 use Modules\Settings\Http\Controllers\AboutController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes

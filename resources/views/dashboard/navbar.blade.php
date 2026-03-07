@@ -13,11 +13,11 @@
             </li>
 
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="#" class="nav-link">CRM</a>
+                <a href="{{ url('/crm/leads') }}" class="nav-link">CRM</a>
             </li>
 
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="#" class="nav-link">المستخدمين</a>
+                <a href="{{ route('users.index') }}" class="nav-link">المستخدمين</a>
             </li>
 
             <li class="nav-item dropdown d-none d-md-inline-block">
@@ -25,10 +25,10 @@
                     الإدارة
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="#">إعدادات النظام</a></li>
-                    <li><a class="dropdown-item" href="#">بيانات الشركة</a></li>
+                    <li><a class="dropdown-item" href="{{ route('settings.index') }}">إعدادات النظام</a></li>
+                    <li><a class="dropdown-item" href="{{ route('about.index') }}">بيانات الشركة</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">خطة العمل</a></li>
+                    <li><a class="dropdown-item" href="{{ route('tasks.index') }}">خطة العمل</a></li>
                 </ul>
             </li>
             
@@ -36,7 +36,7 @@
 
         <div class="d-flex align-items-center gap-3 ms-auto">
             
-            <button id="exportDB" class="btn btn-primary rounded-pill px-3 py-1 fw-semibold d-none d-lg-flex">
+            <button id="exportDB" class="btn btn-primary rounded-pill px-3 py-1 fw-semibold d-none d-lg-flex" onclick="window.location.href='{{ route('backup') }}'">
                 <i class="fas fa-database me-1"></i> حفظ نسخة احتياطية
             </button>
 
@@ -79,6 +79,14 @@
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+        }
+
+        // Initialize Bootstrap 5 dropdowns explicitly
+        if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+            var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'))
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl)
             })
         }
     });

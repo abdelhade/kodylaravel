@@ -15,22 +15,31 @@ class SettingsController extends Controller
      */
     public function index(Request $request)
     {
-        // Check if password is provided
-        if (!$request->has('password') || !$request->filled('password')) {
-            return view('settings::password-check');
-        }
-
-        // Get settings password from language file or settings table
         $settings = SidebarHelper::getSettings();
         $lang = SidebarHelper::getLanguageVariables($settings['lang'] ?? 'ar');
         
-        // Get password from language file or settings table
-        $sittingpass = $lang['sittingpass'] ?? $settings['edit_pass'] ?? 'hadi@1234';
+        // Check if password is provided
+        if (!$request->has('password') || !$request->filled('password')) {
+            return view('settings::password-check', compact('settings', 'lang'));
+        }
+
+        // Get password from settings table
+        $sittingpass = $settings['edit_pass'] ?? '198';
         
-        // Verify password
+        // Debug: Log the comparison
+        \Log::info('Password Check', [
+            'input' => $request->password,
+            'expected' => $sittingpass,
+            'match' => $request->password == $sittingpass
+        ]);
+        
+        // Verify password (use loose comparison to handle type differences)
         if ($request->password != $sittingpass) {
             return view('settings::password-check', [
-                'error' => 'كلمة المرور غير صحيحة'
+                'error' => 'كلمة المرور غير صحيحة. الرجاء المحاولة مرة أخرى.',
+                'settings' => $settings,
+                'lang' => $lang,
+                'debug' => "المدخل: {$request->password}, المتوقع: {$sittingpass}"
             ]);
         }
 
@@ -44,7 +53,16 @@ class SettingsController extends Controller
             ->get();
 
 
-        return view('settings::index', compact('settingsData', 'accounts', 'settings', 'lang', ));
+        return view('settings::index', compact('settingsData', 'accounts', 'settings', 'lang'));
+    }
+
+    /**
+     * Store method for resource route (redirects to index with password)
+     */
+    public function store(Request $request)
+    {
+        // This is used for password verification form
+        return $this->index($request);
     }
 
     /**

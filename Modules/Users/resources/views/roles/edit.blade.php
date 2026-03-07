@@ -1,22 +1,20 @@
 @extends('dashboard.layout')
 
 @section('content')
-<div class="content-wrapper">
-<section class="content-header">
-<div class="container-fluid">
+<div class="container-fluid ح-3">
     @if($role['show_users'] == 1)
         <form action="{{ route('roles.update', ['id' => $roleData->id]) }}" method="post">
             @csrf
             @method('PUT')
             <div class="card card-warning">
                 <div class="card-header">
-                    <div class="row">
+                    <div class="row ">
                         <div class="col-md-10">
                             <h3>تعديل دور {{ $roleData->rollname }}</h3>
                         </div>
                         <div class="col-md-2">
+                        <button type="submit" class="btn btn-success">حفظ</button>
                         </div>
-                        <button type="submit" class="btn btn-light col-sm-2">حفظ</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -211,8 +209,6 @@
     @else
         <div class="alert alert-danger">{{ $lang['userErrorMassage'] ?? 'ليس لديك صلاحية للوصول إلى هذه الصفحة' }}</div>
     @endif
-</div>
-</section>
 </div>
 
 <script>

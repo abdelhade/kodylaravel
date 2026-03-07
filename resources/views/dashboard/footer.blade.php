@@ -87,22 +87,7 @@ function sT(inputElement) {
 
 <script>
 
-$(document).ready(function(){
-    $("#exportDB").click(function(){
-        // Execute AJAX request
-        $.ajax({
-            url: "{{ url('native/do/dobackup.php') }}",
-            type: "POST",
-            data: {},
-            success: function(response){
-              alert("تم حفظ نسخه احتياطية بنجاح");
-            },
-            error: function(xhr, status, error){
-              alert("هناك خطأ ما");
-            }
-        });
-    });
-});
+
 </script>
 
 <!--_________________________________________________________الاحداث __________________________________________-->

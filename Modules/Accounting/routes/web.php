@@ -8,7 +8,6 @@ use Modules\Accounting\Http\Controllers\JournalController;
 use Modules\Accounting\Http\Controllers\StartBalanceController;
 use Modules\Accounting\Http\Controllers\AccountReportController;
 use Modules\Accounting\Http\Controllers\RentController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Resource routes
@@ -43,9 +42,6 @@ Route::middleware('check.auth')->group(function () {
     // Account Report routes (Converted to Blade)
     Route::get('/acc_report', [AccountReportController::class, 'index'])->name('acc-report.index'); // Uses ?acc= query param
     
-    // Legacy routes - الحسابات العامه
-    Route::get('/items_start_balance', [LegacyController::class, 'handle'])->name('items_start_balance');
-    
     // Vouchers routes (Converted to Blade)
     Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
     Route::get('/add_voucher', [VoucherController::class, 'create'])->name('vouchers.create');
@@ -53,9 +49,6 @@ Route::middleware('check.auth')->group(function () {
     Route::get('/add_voucher/edit', [VoucherController::class, 'edit'])->name('vouchers.edit'); // Uses ?edit= query param
     Route::put('/add_voucher/update', [VoucherController::class, 'update'])->name('vouchers.update'); // Uses ?id= query param
     Route::get('/add_voucher/delete', [VoucherController::class, 'destroy'])->name('vouchers.destroy'); // Uses ?id= query param
-    
-    // Legacy routes - التقارير (الحسابات)
-    Route::match(['get', 'post'], '/summary', [LegacyController::class, 'handle'])->name('summary');
     
     // Rents routes (Converted to Blade)
     Route::get('/rentables', [RentController::class, 'index'])->name('rents.index');

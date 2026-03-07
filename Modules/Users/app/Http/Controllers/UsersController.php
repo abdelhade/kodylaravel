@@ -96,13 +96,8 @@ class UsersController extends Controller
             ->with('success', 'تم إضافة المستخدم بنجاح');
     }
 
-    public function edit(Request $request)
+    public function edit($id)
     {
-        $id = $request->get('id');
-        if (!$id) {
-            return redirect()->back()->with('error', 'معرف المستخدم مطلوب');
-        }
-
         $user = DB::table('users')
             ->where('id', $id)
             ->first();
@@ -122,13 +117,8 @@ class UsersController extends Controller
         return view('users::edit', compact('user', 'roles', 'settings', 'lang'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        $id = $request->get('id');
-        if (!$id) {
-            return redirect()->back()->with('error', 'معرف المستخدم مطلوب');
-        }
-
         $validator = Validator::make($request->all(), [
             'uname' => 'required|string|max:20',
             'userrole' => 'required|integer|exists:usr_pwrs,id',
@@ -187,13 +177,8 @@ class UsersController extends Controller
             ->with('success', 'تم تحديث المستخدم بنجاح');
     }
 
-    public function destroy(Request $request)
+    public function destroy($id)
     {
-        $id = $request->get('id');
-        if (!$id) {
-            return redirect()->back()->with('error', 'معرف المستخدم مطلوب');
-        }
-
         // Hard delete (as in native code)
         DB::table('users')
             ->where('id', $id)

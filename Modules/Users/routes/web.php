@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Users\Http\Controllers\UsersController;
 use Modules\Users\Http\Controllers\PasswordController;
 use Modules\Users\Http\Controllers\RoleController;
-use App\Http\Controllers\LegacyController;
 
 Route::middleware('check.auth')->group(function () {
     // Users routes (Converted to Blade)
