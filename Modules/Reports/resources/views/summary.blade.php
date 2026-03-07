@@ -7,77 +7,72 @@
     <!-- SheetJS for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">
-                <form action="{{ route('reports.summary') }}" method="post" id="myForm">
+    <div class="container-fluid p-2">
+        <div class="card ">
+            <div class="card-header bg-primary">
+                <h4 class="mb-0">كشف حساب</h4>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('reports.summary') }}" method="post" id="myForm" class="form mb-4">
                     @csrf
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <p>اختر حساب</p>
-                                <select class="select2 form-control" name="acc_id" id="acc" required>
-                                    <option value="0">اختر حساب</option>
-                                    @foreach ($accounts as $account)
-                                        <option value="{{ $account->id }}"
-                                            {{ old('acc_id', $accountId) == $account->id ? 'selected' : '' }}>
-                                            {{ $account->code }} - {{ $account->aname }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <b>التاريخ</b>
-                            <div class="form-group">
-                                من <input type="date" value="{{ old('startdate', $startDate) }}" name="startdate"
-                                    class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                الي <input type="date" value="{{ old('enddate', $endDate) }}" name="enddate"
-                                    class="form-control" required>
-                            </div>
-                            <p>
-                                رصيد الحساب: <strong>{{ number_format($accountBalance, 2) }}</strong>
-                            </p>
-                        </div>
-                        <div class="col-sm-1">
-                            <button type="submit" class="btn btn-primary btn-lg btn-block">اعرض</button>
+                    <div class="row align-items-end mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">اختر حساب</label>
+                            <select class="select2 form-control" name="acc_id" id="acc" required>
+                                <option value="0">اختر حساب</option>
+                                @foreach ($accounts as $account)
+                                    <option value="{{ $account->id }}"
+                                        {{ old('acc_id', $accountId) == $account->id ? 'selected' : '' }}>
+                                        {{ $account->code }} - {{ $account->aname }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-secondary btn-sm btn-block" id="printBtn">
-                                طباعه <i class="fa fa-solid fa-print"></i>
+                            <label class="form-label">من</label>
+                            <input type="date" value="{{ old('startdate', $startDate) }}" name="startdate" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">الي</label>
+                            <input type="date" value="{{ old('enddate', $endDate) }}" name="enddate" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">اعرض</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-secondary" id="printBtn">
+                                <i class="fa fa-print"></i> طباعه
                             </button>
-                            <button type="button" class="btn btn-outline-success btn-sm btn-block" id="exportExcel">
-                                <i class="fa fa-solid fa-table"></i> Excel
+                            <button type="button" class="btn btn-outline-success" id="exportExcel">
+                                <i class="fa fa-table"></i> Excel
                             </button>
                         </div>
                     </div>
+                    
+                    
                 </form>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive" id="horsTable">
-                    <b>{{ $settings['company_name'] ?? '' }} / {{ $settings['company_tel'] ?? '' }}</b>
-                    <p>{{ $settings['company_add'] ?? '' }}</p>
 
-                    <center>
-                        <h3 class='hazaz'>كشف حساب
+                <div class="table-responsive" id="horsTable">
+                    <div class="text-center mb-3 d-none d-print-block">
+                        <h5>{{ $settings['company_name'] ?? '' }}</h5>
+                        <p>{{ $settings['company_add'] ?? '' }} / {{ $settings['company_tel'] ?? '' }}</p>
+                        <h4>كشف حساب
                             @if ($accountData)
                                 {{ $accountData->aname }}
                             @endif
-                        </h3>
-                    </center>
+                        </h4>
+                    </div>
 
-                    <table class="table table-bordered" style="text-align:center" data-page-length='50'>
-                        <thead>
-                            <tr>
-                                <th>م</th>
-                                <th>التاريخ</th>
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr class="text-center">
+                                <th style="width: 50px;">م</th>
+                                <th style="width: 120px;">التاريخ</th>
                                 <th>اسم العملية</th>
-                                <th>مدين</th>
-                                <th>دائن</th>
-                                <th>رصيد متحرك</th>
-                                <th>الحساب المقابل</th>
+                                <th style="width: 120px;">مدين</th>
+                                <th style="width: 120px;">دائن</th>
+                                <th style="width: 120px;">رصيد متحرك</th>
+                                <th style="width: 200px;">الحساب المقابل</th>
                                 <th>ملاحظات</th>
                             </tr>
                         </thead>
@@ -94,13 +89,13 @@
                                         $credit = $transaction->credit ?? 0;
                                         $cumulativeBalance += $debit - $credit;
                                     @endphp
-                                    <tr>
+                                    <tr class="text-center">
                                         <td>{{ $x }}</td>
                                         <td>{{ $transaction->pro_date }}</td>
                                         <td>{{ $transaction->type_name }}</td>
                                         <td class="td4">{{ number_format($debit, 2) }}</td>
                                         <td class="td5">{{ number_format($credit, 2) }}</td>
-                                        <td class="td6">{{ number_format($cumulativeBalance, 2) }}</td>
+                                        <td class="td6 fw-bold">{{ number_format($cumulativeBalance, 2) }}</td>
                                         <td>{{ $transaction->counter_account }}</td>
                                         <td>{{ $transaction->info ?? '' }}</td>
                                     </tr>
@@ -119,15 +114,12 @@
                                 </tr>
                             @endif
                         </tbody>
-                        <tfoot>
-                            <tr class="bg-sky-100" style="font-size:20px">
-                                <th></th>
-                                <th></th>
-                                <th>اجمالي مدين</th>
+                        <tfoot class="table-secondary">
+                            <tr class="text-center fw-bold">
+                                <th colspan="3">الإجمالي</th>
                                 <th class="sumth4">0</th>
-                                <th>اجمالي دائن</th>
                                 <th class="sumth5">0</th>
-                                <th>صافي الحركة</th>
+                                <th colspan="2">صافي الحركة</th>
                                 <th class="net">0</th>
                             </tr>
                         </tfoot>

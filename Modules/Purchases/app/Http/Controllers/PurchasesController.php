@@ -260,6 +260,103 @@ class PurchasesController extends Controller
                 throw new \Exception('يجب إضافة صنف واحد على الأقل');
             }
 
+            /* ========================
+             إنشاء القيد المحاسبي
+             ========================= */
+            
+            // فقط للفواتير الفعلية (مشتريات ومردودات)
+            if (in_array($pro_tybe, [self::INVOICE_TYPES['PURCHASE'], self::INVOICE_TYPES['PURCHASE_RETURN']])) {
+                // الحصول على رقم القيد التالي
+                $maxJournalId = DB::table('journal_heads')->max('journal_id') ?? 0;
+                $journalId = $maxJournalId + 1;
+                
+                // تحديد نوع القيد
+                $journalDetails = $pro_tybe == self::INVOICE_TYPES['PURCHASE_RETURN'] 
+                    ? 'مردود مشتريات _ ' . $last_op 
+                    : 'فاتورة مشتريات _ ' . $last_op;
+                
+                // إنشاء رأس القيد
+                $journalHeadId = DB::table('journal_heads')->insertGetId([
+                    'journal_id' => $journalId,
+                    'total' => $headnet,
+                    'jdate' => $pro_date,
+                    'details' => $journalDetails,
+                    'user' => Auth::id() ?? 1,
+                    'op_id' => $last_op,
+                    'crtime' => now(),
+                    'mdtime' => now(),
+                    'isdeleted' => 0,
+                ]);
+                
+                if ($pro_tybe == self::INVOICE_TYPES['PURCHASE_RETURN']) {
+                    // مردود مشتريات: عكس القيد
+                    // من حـ/ المورد (مدين)
+                    DB::table('journal_entries')->insert([
+                        'journal_id' => $journalHeadId,
+                        'account_id' => $acc2_id,
+                        'debit' => $headnet,
+                        'credit' => 0,
+                        'tybe' => 0,
+                        'op_id' => $last_op,
+                        'crtime' => now(),
+                        'mdtime' => now(),
+                        'isdeleted' => 0,
+                    ]);
+                    
+                    // إلى حـ/ المخزن (دائن)
+                    DB::table('journal_entries')->insert([
+                        'journal_id' => $journalHeadId,
+                        'account_id' => $store_id,
+                        'debit' => 0,
+                        'credit' => $headnet,
+                        'tybe' => 1,
+                        'op_id' => $last_op,
+                        'crtime' => now(),
+                        'mdtime' => now(),
+                        'isdeleted' => 0,
+                    ]);
+                } else {
+                    // مشتريات عادية
+                    // من حـ/ المخزن (مدين)
+                    DB::table('journal_entries')->insert([
+                        'journal_id' => $journalHeadId,
+                        'account_id' => $store_id,
+                        'debit' => $headnet,
+                        'credit' => 0,
+                        'tybe' => 0,
+                        'op_id' => $last_op,
+                        'crtime' => now(),
+                        'mdtime' => now(),
+                        'isdeleted' => 0,
+                    ]);
+                    
+                    // إلى حـ/ المورد (دائن)
+                    DB::table('journal_entries')->insert([
+                        'journal_id' => $journalHeadId,
+                        'account_id' => $acc2_id,
+                        'debit' => 0,
+                        'credit' => $headnet,
+                        'tybe' => 1,
+                        'op_id' => $last_op,
+                        'crtime' => now(),
+                        'mdtime' => now(),
+                        'isdeleted' => 0,
+                    ]);
+                }
+                
+                // تحديث أرصدة الحسابات
+                DB::statement("
+                    UPDATE acc_head 
+                    SET balance = (
+                        SELECT COALESCE(SUM(journal_entries.debit) - SUM(journal_entries.credit), 0) 
+                        FROM journal_entries 
+                        WHERE journal_entries.account_id = acc_head.id 
+                        AND journal_entries.isdeleted = 0
+                    )
+                    WHERE id IN (?, ?)
+                ", [$acc2_id, $store_id]);
+            }
+
             DB::commit();
 
             return redirect()->route('purchases.index')->with('success', 'تم حفظ الفاتورة بنجاح - رقم: ' . $last_op);
