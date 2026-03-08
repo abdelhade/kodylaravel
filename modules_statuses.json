@@ -25,5 +25,6 @@
     "Print": true,
     "Purchases": true,
     "Voucher": true,
-    "CRM": true
+    "CRM": true,
+    "Mobile": true
 }

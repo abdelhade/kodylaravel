@@ -1,0 +1,11 @@
+{
+    "name": "Mobile",
+    "alias": "mobile",
+    "description": "Mobile API Module - إدارة الموبايل",
+    "keywords": ["mobile", "api", "products", "authentication"],
+    "priority": 100,
+    "providers": [
+        "Modules\\Mobile\\Providers\\MobileServiceProvider"
+    ],
+    "files": []
+}

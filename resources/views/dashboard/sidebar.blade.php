@@ -686,16 +686,21 @@
                     <a href="#" class="nav-link" onclick="toggleSubmenu(event, 'mobile-menu')">
                         <i class="nav-icon fas fa-mobile-alt"></i>
                         <p>
-                            ادارة الموبايل
-                            <i class="fas fa-angle-left right ms-auto"></i>
+                            إدارة الموبايل
+                            <i class="right fas fa-angle-left"></i>
                         </p>
                     </a>
-                    <ul class="nav nav-treeview" id="mobile-menu"
-                        style="display: none; background-color: rgba(255,255,255,0.05);">
+                    <ul class="nav nav-treeview" id="mobile-menu" style="display: none;">
                         <li class="nav-item">
-                            <a href="#" class="nav-link -50">
-                                <i class="ml-1 fas fa-info-circle"></i>
-                                <p>قريباً...</p>
+                            <a href="{{ route('mobile.index') }}" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>تصفح المنتجات</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('mobile.pos.index') }}" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>نقطة بيع متنقلة</p>
                             </a>
                         </li>
                     </ul>
